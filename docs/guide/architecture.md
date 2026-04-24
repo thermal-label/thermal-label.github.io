@@ -45,7 +45,7 @@ A single **global CLI** that **auto-detects installed driver packages** and expo
 
 ## Mental model for your app
 
-1. Pick **driver packages** (`*-node` and/or `*--web`).
+1. Pick **driver packages** (`*-node` and/or `*-web`).
 2. Use **`PrinterDiscovery`** from those packages (or `discoverAll` with a curated list).
 3. Call **`PrinterAdapter`** methods; handle **`PrinterStatus.errors`** as structured data.
 4. For previews, render **`PreviewResult`** planes in your UI; respect the `assumed` flag when media is unknown.
