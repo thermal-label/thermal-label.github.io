@@ -25,7 +25,8 @@ export default defineConfig({
     ],
     socialLinks: [{ icon: 'github', link: 'https://github.com/thermal-label' }],
     footer: {
-      message: 'MIT licensed projects. Not affiliated with printer manufacturers.',
+      message:
+        'MIT licensed projects. Not affiliated with printer manufacturers. <a href="https://github.com/sponsors/mannes" rel="noopener noreferrer">Sponsor on GitHub</a>',
       copyright: 'Copyright © thermal-label',
     },
     search: { provider: 'local' },
