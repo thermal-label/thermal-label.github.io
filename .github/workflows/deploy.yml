@@ -49,6 +49,7 @@ jobs:
             echo "Pinning $DISPATCH_REPO to $DISPATCH_REF"
           fi
           npm run docs:pull
+      - run: npm run docs:hardware
       - run: npx vitepress build docs
       - uses: actions/upload-pages-artifact@v3
         with:
