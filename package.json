@@ -8,6 +8,15 @@
     "docs:build": "npm run docs:pull && vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
+  "dependencies": {
+    "@mbtech-nl/bitmap": "^1.2.0",
+    "@thermal-label/brother-ql-core": "^0.2.0",
+    "@thermal-label/brother-ql-web": "^0.2.0",
+    "@thermal-label/labelmanager-core": "^0.2.0",
+    "@thermal-label/labelmanager-web": "^0.2.0",
+    "@thermal-label/labelwriter-core": "^0.2.0",
+    "@thermal-label/labelwriter-web": "^0.2.0"
+  },
   "devDependencies": {
     "vitepress": "^1.6.3"
   }
