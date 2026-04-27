@@ -14,3 +14,7 @@ docs/labelmanager/
 docs/labelwriter/
 docs/cli/
 docs/public/
+
+# Generated at build time by scripts/build-hardware-page.mjs from
+# DEVICES + each driver's docs/hardware-status.yaml.
+docs/hardware/
