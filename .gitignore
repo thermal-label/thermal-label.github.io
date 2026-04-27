@@ -1,4 +1,16 @@
 node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
+.staging
 .DS_Store
+.claude/
+
+# Pulled at build time by scripts/pull-driver-docs.mjs from sibling repos.
+# Tracked content lives in those repos' docs/ folders.
+docs/contracts/
+docs/transport/
+docs/brother-ql/
+docs/labelmanager/
+docs/labelwriter/
+docs/cli/
+docs/public/

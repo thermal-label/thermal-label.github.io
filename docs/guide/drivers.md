@@ -1,6 +1,6 @@
 # Drivers
 
-Each driver is a **monorepo** of npm packages. Install **only** the surfaces you ship.
+Each driver is a **monorepo** of npm packages. Install **only** the surfaces you ship. Per-driver CLIs are no longer published — the unified [`thermal-label-cli`](/guide/cli) auto-detects every installed driver.
 
 ## Brother QL — `@thermal-label/brother-ql-*`
 
@@ -9,27 +9,30 @@ Each driver is a **monorepo** of npm packages. Install **only** the surfaces you
 - **`brother-ql-core`** — protocol, device registry, media registry (browser + Node).
 - **`brother-ql-node`** — USB (libusb) and **TCP** transport with full printer API.
 - **`brother-ql-web`** — **WebUSB** in Chromium-class browsers.
-- **`brother-ql-cli`** — `brother-ql` binary for list/print/status.
 
 **Platforms:** Node **≥ 24** for Node packages; browser paths need **secure context** (`https` or `localhost`) and WebUSB-capable Chromium. Linux USB usually needs a **udev** rule.
 
-Hardware tables and caveats live in the upstream project site linked from the GitHub README.
+[Per-package docs →](/brother-ql/) · [Hardware list →](/brother-ql/hardware)
 
 ## DYMO LabelWriter — `@thermal-label/labelwriter-*`
 
 Direct thermal LabelWriter support:
 
-- **`labelwriter-core`**, **`labelwriter-node`** (USB + TCP), **`labelwriter-web`** (WebUSB), **`labelwriter-cli`**.
+- **`labelwriter-core`**, **`labelwriter-node`** (USB + TCP), **`labelwriter-web`** (WebUSB).
 
-**Important:** LabelWriter **550 / 5XL** enforce an **NFC label lock** — only genuine DYMO media will print. That is a **hardware** restriction, not something a driver can bypass. Read the upstream hardware guide before buying hardware for a integration.
+**Important:** LabelWriter **550 / 5XL** enforce an **NFC label lock** — only genuine DYMO media will print. That is a **hardware** restriction, not something a driver can bypass. Read the upstream hardware guide before buying hardware for an integration.
+
+[Per-package docs →](/labelwriter/) · [Hardware list →](/labelwriter/hardware)
 
 ## DYMO LabelManager — `@thermal-label/labelmanager-*`
 
 **D1 tape** LabelManager devices:
 
-- **`labelmanager-core`**, **`labelmanager-node`** (HID on Node), **`labelmanager-web`** (**WebHID** in supported browsers), **`labelmanager-cli`**.
+- **`labelmanager-core`**, **`labelmanager-node`** (USB on Node), **`labelmanager-web`** (browser).
 
-**Platforms:** Node **≥ 24**; WebHID requires compatible Chromium and secure context. Linux often needs **udev** and sometimes **usb_modeswitch** for reliable USB.
+**Platforms:** Node **≥ 24**; browser paths require compatible Chromium and secure context. Linux often needs **udev** and sometimes **usb_modeswitch** for reliable USB.
+
+[Per-package docs →](/labelmanager/) · [Hardware list →](/labelmanager/hardware)
 
 ## Shared contracts and transport
 

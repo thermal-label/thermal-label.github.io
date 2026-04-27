@@ -4,25 +4,138 @@ export default defineConfig({
   title: 'thermal-label',
   description: 'TypeScript drivers and transports for thermal label printers.',
   cleanUrls: true,
+
+  // Per-driver content lands under docs/<repo>/ via scripts/pull-driver-docs.mjs.
+  // - localhostLinks: dev-time references to local servers
+  // - ./LICENSE in typedoc-generated api/README.md files: that LICENSE lives
+  //   in the source repo, not in the docs site
+  ignoreDeadLinks: [
+    'localhostLinks',
+    /^\.\/LICENSE$/,
+  ],
+
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/introduction' },
-      { text: 'Related orgs', link: '/related-orgs' },
-    ],
-    sidebar: [
       {
-        text: 'Guide',
+        text: 'Packages',
         items: [
-          { text: 'Introduction', link: '/guide/introduction' },
-          { text: 'Architecture', link: '/guide/architecture' },
-          { text: 'Drivers', link: '/guide/drivers' },
-          { text: 'CLI', link: '/guide/cli' },
-          { text: 'Integrating', link: '/guide/integrating' },
+          { text: 'contracts', link: '/contracts/' },
+          { text: 'transport', link: '/transport/' },
+          { text: 'brother-ql', link: '/brother-ql/' },
+          { text: 'labelmanager', link: '/labelmanager/' },
+          { text: 'labelwriter', link: '/labelwriter/' },
+          { text: 'cli', link: '/cli/' },
         ],
       },
-      { text: 'Related organizations', link: '/related-orgs' },
+      { text: 'Demo', link: '/demo/' },
+      { text: 'Related orgs', link: '/related-orgs' },
     ],
+
+    sidebar: {
+      '/guide/': [
+        {
+          text: 'Guide',
+          items: [
+            { text: 'Introduction', link: '/guide/introduction' },
+            { text: 'Architecture', link: '/guide/architecture' },
+            { text: 'Drivers', link: '/guide/drivers' },
+            { text: 'CLI', link: '/guide/cli' },
+            { text: 'Integrating', link: '/guide/integrating' },
+            { text: 'Adding a driver', link: '/guide/adding-a-driver' },
+          ],
+        },
+      ],
+
+      '/contracts/': [
+        {
+          text: '@thermal-label/contracts',
+          items: [
+            { text: 'Overview', link: '/contracts/' },
+          ],
+        },
+      ],
+
+      '/transport/': [
+        {
+          text: '@thermal-label/transport',
+          items: [
+            { text: 'Overview', link: '/transport/' },
+          ],
+        },
+      ],
+
+      '/brother-ql/': [
+        {
+          text: '@thermal-label/brother-ql-*',
+          items: [
+            { text: 'Overview', link: '/brother-ql/' },
+            { text: 'Getting started', link: '/brother-ql/getting-started' },
+            { text: 'Core (protocol)', link: '/brother-ql/core' },
+            { text: 'Node', link: '/brother-ql/node' },
+            { text: 'Web (WebUSB)', link: '/brother-ql/web' },
+            { text: 'Hardware', link: '/brother-ql/hardware' },
+            { text: 'Media', link: '/brother-ql/media' },
+            { text: 'Protocol', link: '/brother-ql/protocol' },
+            { text: 'Troubleshooting', link: '/brother-ql/troubleshooting' },
+            { text: 'Live demo', link: '/demo/brother-ql' },
+          ],
+        },
+      ],
+
+      '/labelmanager/': [
+        {
+          text: '@thermal-label/labelmanager-*',
+          items: [
+            { text: 'Overview', link: '/labelmanager/' },
+            { text: 'Getting started', link: '/labelmanager/getting-started' },
+            { text: 'Core (protocol)', link: '/labelmanager/core' },
+            { text: 'Node', link: '/labelmanager/node' },
+            { text: 'Web', link: '/labelmanager/web' },
+            { text: 'Hardware', link: '/labelmanager/hardware' },
+            { text: 'Live demo', link: '/demo/labelmanager' },
+          ],
+        },
+      ],
+
+      '/labelwriter/': [
+        {
+          text: '@thermal-label/labelwriter-*',
+          items: [
+            { text: 'Overview', link: '/labelwriter/' },
+            { text: 'Getting started', link: '/labelwriter/getting-started' },
+            { text: 'Core (protocol)', link: '/labelwriter/core' },
+            { text: 'Node', link: '/labelwriter/node' },
+            { text: 'Web (WebUSB)', link: '/labelwriter/web' },
+            { text: 'Hardware', link: '/labelwriter/hardware' },
+            { text: 'Live demo', link: '/demo/labelwriter' },
+          ],
+        },
+      ],
+
+      '/cli/': [
+        {
+          text: 'thermal-label-cli',
+          items: [
+            { text: 'Overview', link: '/cli/' },
+          ],
+        },
+      ],
+
+      '/demo/': [
+        {
+          text: 'Live demos',
+          items: [
+            { text: 'Pick a printer family', link: '/demo/' },
+            { text: 'Brother QL', link: '/demo/brother-ql' },
+            { text: 'DYMO LabelManager', link: '/demo/labelmanager' },
+            { text: 'DYMO LabelWriter', link: '/demo/labelwriter' },
+          ],
+        },
+      ],
+    },
+
     socialLinks: [{ icon: 'github', link: 'https://github.com/thermal-label' }],
     footer: {
       message:

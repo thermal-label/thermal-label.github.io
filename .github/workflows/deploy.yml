@@ -3,6 +3,16 @@ name: Deploy VitePress to GitHub Pages
 on:
   push:
     branches: [main]
+  # Source repos dispatch this event from their release workflows after a
+  # successful publish so the docs site rebuilds with the new version.
+  # Payload conventions: { repo: '<repo-name>', ref: '<git-tag-or-branch>' }
+  repository_dispatch:
+    types: [docs-update]
+  workflow_dispatch:
+  # Backstop: nightly rebuild picks up content drift on `main` for unreleased
+  # changes. Off by default — uncomment if drift becomes an issue.
+  # schedule:
+  #   - cron: '0 4 * * *'
 
 permissions:
   contents: read
@@ -25,7 +35,21 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run docs:build
+      - name: Pull per-repo docs
+        env:
+          # repository_dispatch payload may pin a single source repo to a
+          # specific ref; pass it through as the appropriate env var so the
+          # puller picks it up.
+          DISPATCH_REPO: ${{ github.event.client_payload.repo }}
+          DISPATCH_REF: ${{ github.event.client_payload.ref }}
+        run: |
+          if [ -n "$DISPATCH_REPO" ] && [ -n "$DISPATCH_REF" ]; then
+            UPPER=$(echo "$DISPATCH_REPO" | tr '[:lower:]-' '[:upper:]_')
+            export "TL_DOCS_${UPPER}=${DISPATCH_REF}"
+            echo "Pinning $DISPATCH_REPO to $DISPATCH_REF"
+          fi
+          npm run docs:pull
+      - run: npx vitepress build docs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist

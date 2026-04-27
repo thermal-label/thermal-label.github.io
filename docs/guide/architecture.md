@@ -24,6 +24,7 @@ Runtime implementations of `Transport`:
 | `TcpTransport` | Node | Raw TCP (JetDirect-style, default port 9100) with partial-read buffering |
 | `WebUsbTransport` | Browser | `navigator.usb` picker and `USBDevice` wrapper |
 | `WebBluetoothTransport` | Browser | GATT write/notify with configurable MTU |
+| `WebSerialTransport` | Browser | `navigator.serial` picker for Web Serial-capable devices |
 
 **Subpath imports** matter: `@thermal-label/transport/node` vs `/web` so bundlers never see the optional `usb` native peer dependency unless you are on Node.
 
@@ -31,13 +32,15 @@ Discovery helpers (`matchDevice`, `buildUsbFilters`, `buildBluetoothRequestOptio
 
 ## Layer 3 — Device driver monorepos
 
-Each family publishes **`core`**, **`node`**, **`web`**, and often **`cli`** packages:
+Each family publishes **`core`**, **`node`**, **`web`** packages:
 
 - **Brother QL** — USB + TCP on Node; WebUSB in browser; media registry in core.
 - **DYMO LabelWriter** — USB + TCP on Node; WebUSB in browser; hardware notes for NFC-locked models documented upstream.
-- **DYMO LabelManager** — Node HID and **browser WebHID** for D1 tape printers.
+- **DYMO LabelManager** — USB on Node and browser for D1 tape printers.
 
 Cores hold **protocol encoding** and **device registries**; runtimes wrap **transports** and expose ergonomic `openPrinter` / `requestPrinter` APIs.
+
+Per-driver `*-cli` packages were retired in the 0.2 release pass — the unified [`thermal-label-cli`](/guide/cli) auto-discovers any installed driver via its `discovery` named export.
 
 ## Layer 4 — `thermal-label-cli`
 

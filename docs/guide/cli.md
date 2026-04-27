@@ -18,6 +18,8 @@ Install the CLI **globally** plus **only** the driver packages you need:
 
 ```bash
 npm install -g thermal-label-cli @thermal-label/brother-ql-node
+# or, for a project-local install:
+pnpm add -D thermal-label-cli @thermal-label/brother-ql-node
 ```
 
 | Printer family | Driver package |
