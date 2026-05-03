@@ -2,41 +2,22 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import data from '../../hardware/_data.json';
 
-interface Report {
-  issue: number;
-  reporter: string;
-  date: string;
-  result: string;
-  os?: string;
-  notes?: string;
-  selfVerified?: boolean;
-}
-
 interface Row {
   key: string;
   driver: string;
   family: string;
   name: string;
-  vid: number;
-  pid: number;
-  pidHex: string;
   transports: string[];
   status: 'verified' | 'partial' | 'broken' | 'untested';
-  transportStatus: Record<string, string> | null;
-  lastVerified: string | null;
-  packageVersion: string | null;
-  quirks: string | null;
-  notes: string | null;
-  reports: Report[];
+  slug: string;
 }
 
-interface DriverData {
+interface DriverMeta {
   name: string;
   displayName: string;
   package: string;
   version: string;
   totalDevices: number;
-  devices: Row[];
 }
 
 const STATUS_ORDER: Record<string, number> = data.statusOrder;
@@ -47,69 +28,51 @@ const STATUS_LABEL: Record<string, string> = {
   untested: '· untested',
 };
 const STATUS_LIST = ['verified', 'partial', 'broken', 'untested'] as const;
-const TRANSPORT_LIST = ['usb', 'tcp', 'webusb', 'web-bluetooth', 'web-serial', 'serial'] as const;
+const TRANSPORT_LIST = ['usb', 'tcp', 'serial', 'bluetooth-spp', 'bluetooth-gatt'] as const;
+const TRANSPORT_LABEL: Record<string, string> = {
+  usb: 'USB',
+  tcp: 'TCP',
+  serial: 'Serial',
+  'bluetooth-spp': 'BT SPP',
+  'bluetooth-gatt': 'BT LE',
+};
 
-const allRows: Row[] = (data.drivers as DriverData[]).flatMap(d => d.devices);
-const familyList = (data.drivers as DriverData[]).map(d => d.displayName);
+const allRows: Row[] = data.rows as Row[];
+const familyList = (data.drivers as DriverMeta[]).map(d => d.displayName);
 
 const search = ref('');
 const selectedFamilies = ref<Set<string>>(new Set());
 const selectedStatuses = ref<Set<string>>(new Set());
 const selectedTransports = ref<Set<string>>(new Set());
-const onlyQuirks = ref(false);
-const expandedRow = ref<string | null>(null);
 
-type SortKey = 'family' | 'name' | 'status' | 'lastVerified' | 'packageVersion' | 'pid';
+type SortKey = 'family' | 'name' | 'status';
 type SortDir = 'asc' | 'desc' | null;
 
 const sortKey = ref<SortKey>('family');
 const sortDir = ref<SortDir>('asc');
 
-function rowId(row: Row): string {
-  return `${row.driver}-${row.pidHex}`;
-}
-
-function semverCmp(a: string, b: string): number {
-  const pa = a.split(/[.\-+]/).map(s => Number.isFinite(+s) ? +s : s);
-  const pb = b.split(/[.\-+]/).map(s => Number.isFinite(+s) ? +s : s);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const av = pa[i] ?? 0;
-    const bv = pb[i] ?? 0;
-    if (av < bv) return -1;
-    if (av > bv) return 1;
-  }
-  return 0;
+function detailHref(row: Row): string {
+  return `/hardware/${row.driver}/${row.slug}`;
 }
 
 function matchesSearch(row: Row, q: string): boolean {
   if (!q) return true;
   const lower = q.toLowerCase();
-  if (row.name.toLowerCase().includes(lower)) return true;
-  // PID search: hex with or without 0x, decimal
-  const stripped = lower.replace(/^0x/, '');
-  if (/^[0-9a-f]+$/.test(stripped)) {
-    if (row.pidHex.toLowerCase().includes(stripped)) return true;
-    if (String(row.pid) === stripped) return true;
-    if (parseInt(stripped, 16) === row.pid) return true;
-  }
-  return false;
+  return row.name.toLowerCase().includes(lower) || row.key.toLowerCase().includes(lower);
 }
 
 const filteredRows = computed(() => {
   const fams = selectedFamilies.value;
   const sts = selectedStatuses.value;
   const trs = selectedTransports.value;
-  const quirksOnly = onlyQuirks.value;
   const q = search.value.trim();
   return allRows.filter(row => {
     if (fams.size > 0 && !fams.has(row.family)) return false;
     if (sts.size > 0 && !sts.has(row.status)) return false;
     if (trs.size > 0) {
-      // OR within facet: any selected transport applies to this device
       const hits = [...trs].some(t => row.transports.includes(t));
       if (!hits) return false;
     }
-    if (quirksOnly && !row.quirks) return false;
     if (!matchesSearch(row, q)) return false;
     return true;
   });
@@ -117,19 +80,16 @@ const filteredRows = computed(() => {
 
 const sortedRows = computed(() => {
   const rows = [...filteredRows.value];
-  const k = sortKey.value;
   const dir = sortDir.value;
   if (!dir) return rows;
   const mul = dir === 'asc' ? 1 : -1;
+  const k = sortKey.value;
   rows.sort((a, b) => {
     let cmp = 0;
     switch (k) {
-      case 'family':         cmp = a.family.localeCompare(b.family); break;
-      case 'name':           cmp = a.name.localeCompare(b.name); break;
-      case 'status':         cmp = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99); break;
-      case 'lastVerified':   cmp = (a.lastVerified ?? '').localeCompare(b.lastVerified ?? ''); break;
-      case 'packageVersion': cmp = a.packageVersion && b.packageVersion ? semverCmp(a.packageVersion, b.packageVersion) : (a.packageVersion ? 1 : b.packageVersion ? -1 : 0); break;
-      case 'pid':            cmp = a.pid - b.pid; break;
+      case 'family': cmp = a.family.localeCompare(b.family); break;
+      case 'name':   cmp = a.name.localeCompare(b.name); break;
+      case 'status': cmp = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99); break;
     }
     if (cmp === 0) cmp = a.family.localeCompare(b.family) || a.name.localeCompare(b.name);
     return cmp * mul;
@@ -173,13 +133,7 @@ function clearAll() {
   selectedFamilies.value = new Set();
   selectedStatuses.value = new Set();
   selectedTransports.value = new Set();
-  onlyQuirks.value = false;
   search.value = '';
-}
-
-function toggleExpand(row: Row) {
-  const id = rowId(row);
-  expandedRow.value = expandedRow.value === id ? null : id;
 }
 
 // URL hash state
@@ -188,7 +142,6 @@ function serializeState(): string {
   if (selectedFamilies.value.size > 0) parts.push('family=' + [...selectedFamilies.value].map(encodeURIComponent).join(','));
   if (selectedStatuses.value.size > 0) parts.push('status=' + [...selectedStatuses.value].join(','));
   if (selectedTransports.value.size > 0) parts.push('transport=' + [...selectedTransports.value].join(','));
-  if (onlyQuirks.value) parts.push('quirks=1');
   if (search.value) parts.push('q=' + encodeURIComponent(search.value));
   if (sortKey.value !== 'family' || sortDir.value !== 'asc') {
     parts.push('sort=' + sortKey.value + '-' + (sortDir.value ?? 'none'));
@@ -208,12 +161,11 @@ function deserializeState(hash: string) {
   selectedFamilies.value = new Set(params.get('family')?.split(',').map(decodeURIComponent).filter(Boolean) ?? []);
   selectedStatuses.value = new Set(params.get('status')?.split(',').filter(Boolean) ?? []);
   selectedTransports.value = new Set(params.get('transport')?.split(',').filter(Boolean) ?? []);
-  onlyQuirks.value = params.get('quirks') === '1';
   search.value = decodeURIComponent(params.get('q') ?? '');
   const sort = params.get('sort');
   if (sort) {
     const [k, d] = sort.split('-');
-    if (['family', 'name', 'status', 'lastVerified', 'packageVersion', 'pid'].includes(k)) {
+    if (['family', 'name', 'status'].includes(k)) {
       sortKey.value = k as SortKey;
       sortDir.value = (d === 'asc' || d === 'desc') ? d : null;
     }
@@ -241,20 +193,15 @@ onUnmounted(() => {
   }
 });
 
-// When state changes, push it into the hash. Debounced via watch.
-watch([selectedFamilies, selectedStatuses, selectedTransports, onlyQuirks, search, sortKey, sortDir], () => {
+watch([selectedFamilies, selectedStatuses, selectedTransports, search, sortKey, sortDir], () => {
   if (suppressHashWrite || typeof window === 'undefined') return;
   const next = serializeState();
   const target = next ? '#' + next : window.location.pathname + window.location.search;
   history.replaceState(null, '', target);
 }, { deep: true });
 
-function transportCellSegments(row: Row): { name: string; status: string }[] {
-  if (row.transportStatus) {
-    return Object.entries(row.transportStatus).map(([name, status]) => ({ name, status: status as string }));
-  }
-  // For untested rows, show the transports DEVICES claims with status 'untested'
-  return row.transports.map(name => ({ name, status: 'untested' }));
+function transportTagLabel(t: string): string {
+  return TRANSPORT_LABEL[t] ?? t;
 }
 </script>
 
@@ -268,8 +215,8 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
           v-model="search"
           class="hw-search-input"
           type="search"
-          placeholder="Model name or PID (e.g. QL-820, 0x20a7)"
-          aria-label="Search by model name or PID"
+          placeholder="Model name or key (e.g. QL-820, LW_450)"
+          aria-label="Search by model name or key"
         />
       </label>
 
@@ -316,24 +263,16 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
             :aria-pressed="selectedTransports.has(t)"
             @click="toggleSet(selectedTransports, t)"
           >
-            {{ t }}
+            {{ transportTagLabel(t) }}
           </button>
         </div>
       </div>
 
       <div class="hw-facet hw-facet-toggle">
         <button
-          class="hw-chip"
-          :class="{ active: onlyQuirks }"
-          :aria-pressed="onlyQuirks"
-          @click="onlyQuirks = !onlyQuirks"
-        >
-          Has quirks
-        </button>
-        <button
           class="hw-clear"
           @click="clearAll"
-          :disabled="selectedFamilies.size === 0 && selectedStatuses.size === 0 && selectedTransports.size === 0 && !search && !onlyQuirks"
+          :disabled="selectedFamilies.size === 0 && selectedStatuses.size === 0 && selectedTransports.size === 0 && !search"
         >
           Clear filters
         </button>
@@ -358,85 +297,33 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
           <th scope="col" :aria-sort="ariaSort('name')">
             <button class="hw-sort-btn" @click="cycleSort('name')">Model{{ sortIndicator('name') }}</button>
           </th>
-          <th scope="col" :aria-sort="ariaSort('pid')">
-            <button class="hw-sort-btn" @click="cycleSort('pid')">PID{{ sortIndicator('pid') }}</button>
-          </th>
           <th scope="col">Transports</th>
           <th scope="col" :aria-sort="ariaSort('status')">
             <button class="hw-sort-btn" @click="cycleSort('status')">Status{{ sortIndicator('status') }}</button>
           </th>
-          <th scope="col" :aria-sort="ariaSort('lastVerified')">
-            <button class="hw-sort-btn" @click="cycleSort('lastVerified')">Last verified{{ sortIndicator('lastVerified') }}</button>
-          </th>
-          <th scope="col" :aria-sort="ariaSort('packageVersion')">
-            <button class="hw-sort-btn" @click="cycleSort('packageVersion')">Pkg version{{ sortIndicator('packageVersion') }}</button>
-          </th>
-          <th scope="col">Reports</th>
+          <th scope="col"><span class="hw-sr-only">Detail page</span></th>
         </tr>
       </thead>
       <tbody>
-        <template v-for="row in sortedRows" :key="rowId(row)">
-          <tr :class="['hw-row', 'hw-row-' + row.status]">
-            <td>{{ row.family }}</td>
-            <td>
-              <a :href="'/' + row.driver + '/hardware'" class="hw-name-link">{{ row.name }}</a>
-              <button
-                v-if="row.quirks"
-                class="hw-quirk-badge"
-                :aria-expanded="expandedRow === rowId(row)"
-                @click="toggleExpand(row)"
-                title="This device has known quirks — click for details"
-              >quirks</button>
-            </td>
-            <td><code>{{ row.pidHex }}</code></td>
-            <td>
-              <span
-                v-for="seg in transportCellSegments(row)"
-                :key="seg.name"
-                :class="['hw-tport', 'hw-tport-' + seg.status]"
-              >{{ seg.name }}</span>
-            </td>
-            <td>
-              <span :class="['hw-status', 'hw-status-' + row.status]">{{ STATUS_LABEL[row.status] }}</span>
-            </td>
-            <td>{{ row.lastVerified ?? '—' }}</td>
-            <td>{{ row.packageVersion ?? '—' }}</td>
-            <td>
-              <button
-                v-if="row.reports.length > 0"
-                class="hw-reports-btn"
-                :aria-expanded="expandedRow === rowId(row)"
-                @click="toggleExpand(row)"
-              >
-                {{ row.reports.length }} ▾
-              </button>
-              <span v-else class="hw-reports-empty">—</span>
-            </td>
-          </tr>
-          <tr v-if="expandedRow === rowId(row)" class="hw-row-expanded">
-            <td colspan="8">
-              <div v-if="row.quirks" class="hw-quirks">
-                <strong>Quirks:</strong>
-                <p>{{ row.quirks }}</p>
-              </div>
-              <div v-if="row.notes" class="hw-notes">
-                <strong>Notes:</strong>
-                <p>{{ row.notes }}</p>
-              </div>
-              <div v-if="row.reports.length > 0" class="hw-reports-list">
-                <strong>Reports:</strong>
-                <ul>
-                  <li v-for="rep in row.reports" :key="rep.issue">
-                    <a :href="'https://github.com/thermal-label/' + row.driver + '/issues/' + rep.issue" target="_blank" rel="noopener">#{{ rep.issue }}</a>
-                    by {{ rep.reporter }}<span v-if="rep.selfVerified"> <em>(self-verified)</em></span>
-                    on {{ rep.date }} ({{ rep.os ?? 'OS not specified' }}) — {{ rep.result }}
-                    <span v-if="rep.notes"> — {{ rep.notes }}</span>
-                  </li>
-                </ul>
-              </div>
-            </td>
-          </tr>
-        </template>
+        <tr v-for="row in sortedRows" :key="row.driver + '/' + row.key" :class="['hw-row', 'hw-row-' + row.status]">
+          <td>{{ row.family }}</td>
+          <td>
+            <a :href="detailHref(row)" class="hw-name-link">{{ row.name }}</a>
+          </td>
+          <td>
+            <span
+              v-for="t in row.transports"
+              :key="t"
+              class="hw-tport"
+            >{{ transportTagLabel(t) }}</span>
+          </td>
+          <td>
+            <span :class="['hw-status', 'hw-status-' + row.status]">{{ STATUS_LABEL[row.status] }}</span>
+          </td>
+          <td>
+            <a :href="detailHref(row)" class="hw-detail-link" :aria-label="'Open ' + row.name + ' detail page'">View →</a>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -561,7 +448,7 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
   padding: 0.5rem 0.625rem;
   text-align: left;
   border-bottom: 1px solid var(--vp-c-divider);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .hw-table th {
@@ -594,18 +481,6 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
   text-decoration: underline;
 }
 
-.hw-quirk-badge {
-  margin-left: 0.4rem;
-  padding: 0.05rem 0.375rem;
-  border: 1px solid var(--hw-partial);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--hw-partial);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .hw-tport {
   display: inline-block;
   padding: 0.05rem 0.4rem;
@@ -614,12 +489,9 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
   border-radius: 4px;
   font-size: 0.75rem;
   font-family: var(--vp-font-family-mono);
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
 }
-
-.hw-tport-verified { background: rgba(34, 197, 94, 0.15);  color: var(--hw-verified); }
-.hw-tport-partial  { background: rgba(245, 158, 11, 0.15); color: var(--hw-partial); }
-.hw-tport-broken   { background: rgba(239, 68, 68, 0.15);  color: var(--hw-broken); }
-.hw-tport-untested { background: var(--vp-c-bg-soft);      color: var(--hw-untested); }
 
 .hw-status {
   white-space: nowrap;
@@ -631,33 +503,26 @@ function transportCellSegments(row: Row): { name: string; status: string }[] {
 .hw-status-broken   { color: var(--hw-broken); }
 .hw-status-untested { color: var(--hw-untested); }
 
-.hw-reports-btn {
-  background: none;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 4px;
-  padding: 0.05rem 0.375rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-  color: var(--vp-c-text-1);
+.hw-detail-link {
+  font-size: 0.8125rem;
+  color: var(--vp-c-brand);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.hw-reports-empty {
-  color: var(--hw-untested);
+.hw-detail-link:hover {
+  text-decoration: underline;
 }
 
-.hw-row-expanded td {
-  background: var(--vp-c-bg-soft);
-  padding: 0.75rem;
-}
-
-.hw-quirks,
-.hw-notes,
-.hw-reports-list {
-  margin-bottom: 0.5rem;
-}
-
-.hw-reports-list ul {
-  margin: 0.25rem 0 0 1rem;
+.hw-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
