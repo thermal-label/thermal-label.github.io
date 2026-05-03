@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <title>DYMO LabelWriter 550 (modern, NFC-locked media)</title>
+  <!-- Squared, modern body -->
+  <rect x="6" y="14" width="52" height="36" rx="3"/>
+  <!-- Top trim line -->
+  <line x1="6" y1="22" x2="58" y2="22"/>
+  <!-- Big single feed button (LW 550 has one prominent button) -->
+  <circle cx="48" cy="34" r="3.5"/>
+  <!-- NFC indicator (concentric arcs) on the left side -->
+  <path d="M14 28 Q17 30 14 32"/>
+  <path d="M11 26 Q16 30 11 34"/>
+  <!-- Front label exit slot -->
+  <line x1="12" y1="46" x2="40" y2="46"/>
+  <!-- Emerging die-cut label -->
+  <path d="M18 50 L18 60 L34 60 L34 50"/>
+</svg>

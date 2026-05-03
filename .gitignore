@@ -13,7 +13,15 @@ docs/brother-ql/
 docs/labelmanager/
 docs/labelwriter/
 docs/cli/
-docs/public/
+
+# `docs/public/` itself is build-relocated content (pull-driver-docs.mjs
+# moves each driver's public/ tree under docs/public/<driver>/). Hand-
+# authored static assets live under docs/public/icons/ and must be
+# tracked, so we ignore the directory contents but un-ignore the icons
+# subtree explicitly.
+docs/public/*
+!docs/public/icons
+!docs/public/icons/**
 
 # Generated at build time by scripts/build-hardware-page.mjs from
 # DEVICES + each driver's docs/hardware-status.yaml.

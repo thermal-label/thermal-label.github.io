@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <title>Brother QL desktop label printer</title>
+  <!-- Main body -->
+  <rect x="6" y="20" width="52" height="32" rx="3"/>
+  <!-- Hinged top cover (where the DK roll loads) -->
+  <line x1="6" y1="26" x2="58" y2="26"/>
+  <!-- Right-side control panel: small LCD strip + two buttons -->
+  <rect x="42" y="32" width="12" height="4" rx="0.5"/>
+  <circle cx="46" cy="42" r="1.4" fill="currentColor"/>
+  <circle cx="52" cy="42" r="1.4" fill="currentColor"/>
+  <!-- Front label-exit slot -->
+  <line x1="10" y1="46" x2="38" y2="46"/>
+  <!-- Emerging die-cut label tongue -->
+  <path d="M16 46 L16 60 L32 60 L32 46"/>
+</svg>

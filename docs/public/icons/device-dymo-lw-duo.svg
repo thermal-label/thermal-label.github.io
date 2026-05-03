@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <title>DYMO LabelWriter Duo — composite die-cut + D1 tape</title>
+  <!-- Wider wedge body — Duo carries both engines -->
+  <path d="M2 50 L2 28 L58 18 L58 50 Z"/>
+  <!-- Top: feed button -->
+  <circle cx="48" cy="22" r="2.2"/>
+  <!-- Front label exit (left of centre) -->
+  <line x1="8" y1="46" x2="34" y2="46"/>
+  <path d="M14 50 L14 60 L28 60 L28 50"/>
+  <!-- Side D1 tape exit (right edge) -->
+  <path d="M58 32 L62 32 L62 38 L58 38"/>
+  <line x1="60" y1="35" x2="64" y2="35"/>
+  <!-- Status LED -->
+  <circle cx="40" cy="40" r="1.2" fill="currentColor"/>
+</svg>
