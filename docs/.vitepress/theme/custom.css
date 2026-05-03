@@ -79,29 +79,31 @@
 }
 
 /* Cartridge-tape media swatches in the per-device "Supported media"
-   tables. The Name cell is rendered as a printed-sticker chip whose
-   background and text colour match the actual cassette, so a visitor
-   scanning the table can recognise the loaded cassette by sight.
-   Driven by inline CSS variables emitted by build-hardware-page.mjs. */
+   tables. The Name cell is filled edge-to-edge with the cassette's
+   actual colour so the column reads as a stripe of cassettes — easier
+   to scan than a row of inconsistent inline pills. Driven by inline
+   CSS variables emitted by build-hardware-page.mjs. */
 .media-swatch {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 6px;
+  display: block;
+  padding: 8px 12px;
   background: var(--swatch-bg);
   color: var(--swatch-fg);
-  border: 1px solid rgba(0, 0, 0, 0.18);
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.4;
+  margin: 0;
+  border: 0;
+  box-sizing: border-box;
 }
 
-.dark .media-swatch {
-  /* Fixed swatch colours look the same in dark mode (the tape colour is
-     the tape colour) — but the border becomes invisible against the
-     dark page on `--swatch-bg: #1f1f1f`, so use a lighter outline. */
-  border-color: rgba(255, 255, 255, 0.22);
+/* Strip the table cell's own padding when its only child is a swatch,
+   so the colour bleeds edge-to-edge in the Name column instead of
+   sitting in a halo of unfilled cell padding. :has() is supported
+   in every browser shipped since 2023. */
+.vp-doc table td:has(> .media-swatch) {
+  padding: 0 !important;
 }
 
-/* "Clear" tape: no flat fill — show a checkerboard so the chip reads
+/* "Clear" tape: no flat fill — show a checkerboard so the cell reads
    as transparent the way the cassette actually looks. */
 .media-swatch--clear {
   background:
