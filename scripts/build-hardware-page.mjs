@@ -738,7 +738,7 @@ const DRIVER_OVERVIEWS = {
   },
 };
 
-function renderDriverIndex(driver, pkgVersion, deviceCount) {
+function renderDriverIndex(driver, pkgVersion, deviceCount, apiPackageCount = 0) {
   const overview = DRIVER_OVERVIEWS[driver.name];
   if (!overview) {
     die(`no DRIVER_OVERVIEWS entry for ${driver.name} — add one or remove the driver from DRIVERS`);
@@ -774,7 +774,11 @@ function renderDriverIndex(driver, pkgVersion, deviceCount) {
   sections.push('## Documentation');
   sections.push(docLines.join('\n'));
 
-  if (existsSync(join(driverDir, 'api'))) {
+  // Only surface the API link when we actually have typedoc-generated
+  // package READMEs to point at — labelmanager's main branch ships only
+  // stub `.md` files, so the api/ directory exists but no api/index.md
+  // gets written, which would dead-link.
+  if (apiPackageCount > 0) {
     sections.push('## API reference');
     sections.push(
       `TypeDoc-generated reference for the published packages — ` +
@@ -948,20 +952,26 @@ async function main() {
       totalDevices: devices.length,
     });
 
+    // Detect typedoc packages first so the driver landing knows whether
+    // to surface the API-reference link. labelmanager's main branch
+    // ships only stub `.md` files in docs/api/ (per-package trees are
+    // local-regen-only); without this guard the landing would link into
+    // a generated api/index.md that doesn't get written.
+    const apiDir = join(DOCS_ROOT, driver.name, 'api');
+    const apiPackages = detectApiPackages(apiDir);
+
     // Replace the pulled-from-upstream `<driver>/index.md` (a hero
     // landing whose links assume the driver had its own VitePress site
     // mounted at /) with a generated overview that uses correct
     // /<driver>/* paths and surfaces only the pages actually present.
     writeFileSync(
       join(HW_ROOT, '..', driver.name, 'index.md'),
-      renderDriverIndex(driver, pkgJson.version, devices.length),
+      renderDriverIndex(driver, pkgJson.version, devices.length, apiPackages.length),
     );
 
-    // If the driver shipped a typedoc tree under `<driver>/api/`, drop
-    // an index page on top so `/<driver>/api/` resolves and visitors
-    // get a per-package landing instead of a 404 / raw README.
-    const apiDir = join(DOCS_ROOT, driver.name, 'api');
-    const apiPackages = detectApiPackages(apiDir);
+    // If we detected typedoc packages, drop an index page on top so
+    // `/<driver>/api/` resolves and visitors get a per-package landing
+    // instead of a 404 / raw README.
     if (apiPackages.length > 0) {
       // Remove sibling-named stub `.md` files (e.g. labelmanager ships
       // `api/core.md` next to `api/core/`). VitePress route resolution
