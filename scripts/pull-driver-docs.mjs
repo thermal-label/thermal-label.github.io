@@ -65,7 +65,15 @@ function copyDocsTree(sourceDocs, destDir) {
   if (!isDir(sourceDocs)) {
     fail(`source docs/ not found at ${sourceDocs}`);
   }
-  cpSync(sourceDocs, destDir, { recursive: true });
+  // Filter out PDFs — vendor reference PDFs (DYMO Tech Refs, Brother
+  // raster manuals) sit in driver repos as drafting references only.
+  // They are not ours to redistribute, so the docs site never publishes
+  // them. Driver repos by convention keep `docs/` markdown-only; this
+  // is a guard rather than a routine code path.
+  cpSync(sourceDocs, destDir, {
+    recursive: true,
+    filter: src => !src.toLowerCase().endsWith('.pdf'),
+  });
 }
 
 function shallowClone(repo, ref) {
