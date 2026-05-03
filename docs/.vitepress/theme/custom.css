@@ -1,0 +1,123 @@
+/* thermal-label brand palette: warm thermal-print orange/red. */
+:root {
+  --vp-c-brand-1: #d2461a;
+  --vp-c-brand-2: #e0552a;
+  --vp-c-brand-3: #ec6a40;
+  --vp-c-brand-soft: rgba(236, 106, 64, 0.16);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(
+    120deg,
+    #d2461a 20%,
+    #f59e0b 60%,
+    #facc15 100%
+  );
+
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    #d2461a 30%,
+    #facc15 70%
+  );
+  --vp-home-hero-image-filter: blur(56px);
+}
+
+.dark {
+  --vp-c-brand-1: #f59e0b;
+  --vp-c-brand-2: #ec6a40;
+  --vp-c-brand-3: #d2461a;
+  --vp-c-brand-soft: rgba(245, 158, 11, 0.18);
+}
+
+/* Slightly larger feature-card icons so the emoji actually carries color. */
+.VPFeature .icon {
+  font-size: 28px;
+}
+
+/* Hardware page: table is king. Sidebar + aside are off via frontmatter;
+   widen the content column so the device table can breathe. */
+.hardware-page .VPDoc .container,
+.hardware-page .VPDoc .content {
+  max-width: 100% !important;
+}
+.hardware-page .VPDoc .content-container {
+  max-width: 1400px !important;
+  margin: 0 auto;
+}
+@media (min-width: 960px) {
+  .hardware-page .VPDoc {
+    padding: 32px 48px 96px !important;
+  }
+}
+
+/* Per-device hero icon: hand-drawn line-art SVG floated to the right of
+   the title block. Uses currentColor so it picks up the page's text
+   colour in both light and dark mode. Hidden on narrow screens to keep
+   the title readable. */
+.device-hero-icon {
+  float: right;
+  width: 88px;
+  height: 88px;
+  margin: 0 0 0.5rem 1rem;
+  color: var(--vp-c-brand-1);
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  .device-hero-icon {
+    display: none;
+  }
+}
+
+/* Inline media-category icon used in the at-a-glance table cell. */
+.media-icon-inline {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+  margin-right: 0.25rem;
+  color: var(--vp-c-brand-1);
+}
+
+/* Cartridge-tape media swatches in the per-device "Supported media"
+   tables. The Name cell is rendered as a printed-sticker chip whose
+   background and text colour match the actual cassette, so a visitor
+   scanning the table can recognise the loaded cassette by sight.
+   Driven by inline CSS variables emitted by build-hardware-page.mjs. */
+.media-swatch {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--swatch-bg);
+  color: var(--swatch-fg);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.dark .media-swatch {
+  /* Fixed swatch colours look the same in dark mode (the tape colour is
+     the tape colour) — but the border becomes invisible against the
+     dark page on `--swatch-bg: #1f1f1f`, so use a lighter outline. */
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* "Clear" tape: no flat fill — show a checkerboard so the chip reads
+   as transparent the way the cassette actually looks. */
+.media-swatch--clear {
+  background:
+    linear-gradient(45deg, #d8d8d8 25%, transparent 25%) 0 0 / 8px 8px,
+    linear-gradient(-45deg, #d8d8d8 25%, transparent 25%) 0 4px / 8px 8px,
+    linear-gradient(45deg, transparent 75%, #d8d8d8 75%) 4px -4px / 8px 8px,
+    linear-gradient(-45deg, transparent 75%, #d8d8d8 75%) -4px 0 / 8px 8px,
+    #f7f7f7;
+  color: var(--swatch-fg);
+}
+
+.dark .media-swatch--clear {
+  background:
+    linear-gradient(45deg, #444 25%, transparent 25%) 0 0 / 8px 8px,
+    linear-gradient(-45deg, #444 25%, transparent 25%) 0 4px / 8px 8px,
+    linear-gradient(45deg, transparent 75%, #444 75%) 4px -4px / 8px 8px,
+    linear-gradient(-45deg, transparent 75%, #444 75%) -4px 0 / 8px 8px,
+    #2a2a2a;
+}

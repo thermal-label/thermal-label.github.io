@@ -93,6 +93,38 @@ const TRANSPORT_GLYPH = {
   'bluetooth-gatt': '📶',
 };
 
+// Per-(family, protocol) device icon. Drives the hand-drawn line-art
+// SVG silhouette shown on each device page (docs/public/icons/
+// device-<id>.svg) plus a short prose media label. Keyed `family:protocol`
+// because `d1-tape` belongs to two families with very different
+// physical devices (the LabelManager handheld vs. the LabelWriter Duo
+// composite). When a new combination lands, fall back to no icon
+// rather than mislabelling.
+const DEVICE_ICON = {
+  'brother-ql:ql-raster':   { id: 'brother-ql',         label: 'DK rolls — die-cut + continuous, 12–62 mm wide' },
+  'brother-ql:pt-raster':   { id: 'brother-pt',         label: 'TZe laminated tape (and HSe heat-shrink tube on PT-E models)' },
+  'labelmanager:d1-tape':   { id: 'dymo-labelmanager',  label: 'D1 thermal-transfer tape, 6–24 mm wide' },
+  'labelwriter:lw-450':     { id: 'dymo-lw-450',        label: 'Pre-cut die-cut labels on a backing carrier' },
+  'labelwriter:lw-550':     { id: 'dymo-lw-550',        label: 'Pre-cut die-cut labels — NFC-locked DYMO-genuine media required' },
+  'labelwriter:d1-tape':    { id: 'dymo-lw-duo',        label: 'Composite Duo — pre-cut die-cut labels + D1 tape on a second interface' },
+};
+
+function deviceIconFor(family, engines) {
+  if (!engines || engines.length === 0) return null;
+  const protocols = engines.map(e => e.protocol).filter(Boolean);
+
+  // Composite-device detection: the LabelWriter Duo carries both the
+  // LW raster engine (label side) and a D1 tape engine. Either engine
+  // alone would resolve to a single-output silhouette, but the Duo
+  // chassis has both outputs and deserves its own icon.
+  if (family === 'labelwriter' && protocols.includes('d1-tape')) {
+    return DEVICE_ICON['labelwriter:d1-tape'];
+  }
+
+  const primary = protocols[0];
+  return DEVICE_ICON[`${family}:${primary}`] ?? null;
+}
+
 // Named PrintEngineCapabilities keys from contracts. Driver-side
 // extensions fall through to DRIVER_CAPABILITY_LABELS.
 const ENGINE_CAPABILITY_LABELS = {
@@ -190,6 +222,51 @@ function fmtSkus(m) {
 
 function fmtCategory(m) {
   return m.category ?? m.type ?? '—';
+}
+
+// CSS-friendly hex values for the colour names that appear in
+// MEDIA[*].background and MEDIA[*].text on labelmanager / labelwriter
+// cartridge entries. "clear" has no flat colour — it gets a dedicated
+// CSS class (checker-pattern background) instead.
+const MEDIA_COLOR_HEX = {
+  black:  '#1f1f1f',
+  white:  '#ffffff',
+  blue:   '#1e6cd6',
+  red:    '#d93636',
+  green:  '#2e8540',
+  orange: '#f39820',
+  yellow: '#f5dd2c',
+};
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[c]));
+}
+
+// Render a media entry's name. When the registry carries `text` and
+// `background` colour fields (D1 cartridges, LW Duo tape, LW 550
+// cartridges) emit an inline swatch with those colours so the user
+// recognises the cassette at a glance. Plain entries (DK rolls,
+// die-cut LW labels, TZe rows that aren't per-colour) fall back to
+// the bare name. CSS for `.media-swatch` lives in theme/custom.css.
+function renderMediaName(m) {
+  const name = m.name ?? m.id ?? '—';
+  const bg = m.background;
+  const fg = m.text;
+  if (!bg || !fg) return name;
+  const fgHex = MEDIA_COLOR_HEX[fg];
+  if (!fgHex) return name;
+  if (bg === 'clear') {
+    return `<span class="media-swatch media-swatch--clear" style="--swatch-fg:${fgHex};">${escapeHtml(name)}</span>`;
+  }
+  const bgHex = MEDIA_COLOR_HEX[bg];
+  if (!bgHex) return name;
+  return `<span class="media-swatch" style="--swatch-bg:${bgHex};--swatch-fg:${fgHex};">${escapeHtml(name)}</span>`;
 }
 
 function renderEngineCapabilities(engine) {
@@ -305,7 +382,7 @@ function renderMediaTable(media) {
     '| --- | --- | --- | --- |',
   ];
   for (const m of media) {
-    lines.push(`| ${fmtCategory(m)} | ${m.name ?? m.id ?? '—'} | ${fmtDimensions(m)} | ${fmtSkus(m)} |`);
+    lines.push(`| ${fmtCategory(m)} | ${renderMediaName(m)} | ${fmtDimensions(m)} | ${fmtSkus(m)} |`);
   }
   return lines.join('\n');
 }
@@ -390,12 +467,18 @@ function renderHero(dev, driver, issuesUrl) {
   ].join('\n');
 }
 
-function renderFooterCta(dev, issuesUrl) {
+function renderFooterCta(dev, driver, issuesUrl) {
   const links = buildIssueLinks(dev, issuesUrl);
   if (!links) return '';
+  // Source-of-truth path: each device is one JSON5 file in the driver
+  // repo, named after `dev.key` exactly. Sending docs corrections
+  // straight to that file beats a generic "edit this page" link to a
+  // generated .md that gets overwritten on every build.
+  const dataUrl = `https://github.com/thermal-label/${driver.name}/edit/main/packages/core/data/devices/${dev.key}.json5`;
   return [
     `[**Have one of these? File a verification report →**](${links.verify})`,
     `[**Found a bug? →**](${links.bug})`,
+    `[**Spotted an error on this page? Edit the device data →**](${dataUrl})`,
   ].join('  \n');
 }
 
@@ -427,12 +510,18 @@ function renderAtAGlance(dev, driver, pkgVersion) {
     ? `📅 ${dev.support.lastVerified}`
     : '—';
 
+  const icon = deviceIconFor(dev.family, engines);
+  const mediaCell = icon
+    ? `<img src="/icons/device-${icon.id}.svg" class="media-icon-inline" alt="" /> ${icon.label}`
+    : '—';
+
   const lines = [
     '| | |',
     '| --- | --- |',
     `| ${familyGlyph(dev.family)} **Family** | ${driver.displayName} |`,
     `| 🩺 **Status** | **${statusBadgeInline(status)}** |`,
     `| 🔌 **Transports** | ${transportsCell} |`,
+    `| 🏷️ **Media** | ${mediaCell} |`,
     `| 📐 **Print head** | ${headCell} |`,
     `| 📡 **Protocol** | ${protocolCell} |`,
     `| 📦 **Package** | ${pkgCell} |`,
@@ -448,6 +537,16 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   const hasQuirks = !!(dev.hardwareQuirks || dev.support?.quirks);
 
   const sections = [];
+
+  // Per-(family, protocol) line-art device silhouette as a floated
+  // visual to the right of the title block. Sits before the H1 in
+  // source order so the markdown H1 still anchors VitePress's outline.
+  const icon = deviceIconFor(dev.family, dev.engines);
+  if (icon) {
+    sections.push(
+      `<img src="/icons/device-${icon.id}.svg" class="device-hero-icon" alt="" />`,
+    );
+  }
 
   // Title with the family colour square — same vocabulary as the
   // homepage hero blocks.
@@ -506,7 +605,7 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   sections.push('## Verification reports');
   sections.push(renderReports(dev.support, !!issuesUrl));
 
-  const footerCta = renderFooterCta(dev, issuesUrl);
+  const footerCta = renderFooterCta(dev, driver, issuesUrl);
   if (footerCta) {
     sections.push('---');
     sections.push(footerCta);
@@ -514,10 +613,13 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
 
   // Frontmatter — give the page a title VitePress can use, and hide
   // these per-device pages from the local search if they bloat results.
+  // editLink is off because the page is generated from `data/devices/<KEY>.json5`;
+  // the body's footer CTA links straight to that JSON5 file instead.
   const frontmatter = [
     '---',
     `title: ${escapeYamlValue(dev.name)}`,
     `description: ${escapeYamlValue(`${dev.name} — ${driver.displayName} hardware support, transports, supported media, and verification reports.`)}`,
+    'editLink: false',
     '---',
     '',
   ].join('\n');
@@ -741,7 +843,12 @@ function detectApiPackages(apiDir) {
 function renderApiIndex(driver, packages) {
   const corePkg = driver.pkg.replace(/-core$/, '');
   const lines = packages.map(p => {
-    const fullName = p.pkg.startsWith('@') ? p.pkg : `@thermal-label/${p.pkg}`;
+    // brother-ql ships per-package READMEs already named
+    // `brother-ql-core` etc. inside `@thermal-label/`; labelmanager and
+    // labelwriter use bare `core` / `node` / `web` directories that
+    // need the driver prefix to become a full package name.
+    const isFullName = p.pkg.includes('-');
+    const fullName = isFullName ? `@thermal-label/${p.pkg}` : `${corePkg}-${p.pkg}`;
     return `- [\`${fullName}\`](${p.href}) — TypeDoc-generated reference.`;
   });
 
@@ -855,6 +962,21 @@ async function main() {
     const apiDir = join(DOCS_ROOT, driver.name, 'api');
     const apiPackages = detectApiPackages(apiDir);
     if (apiPackages.length > 0) {
+      // Remove sibling-named stub `.md` files (e.g. labelmanager ships
+      // `api/core.md` next to `api/core/`). VitePress route resolution
+      // matches the stub first and shadows the directory, breaking any
+      // link that descends into `<pkg>/dist/README.md`. Also remove
+      // typedoc's `modules.md` overview since the generated index.md
+      // takes its place — leaving it in would dead-link to the stubs
+      // we just removed.
+      for (const p of apiPackages) {
+        const stub = join(apiDir, `${p.pkg}.md`);
+        if (existsSync(stub) && existsSync(join(apiDir, p.pkg)) && statSync(join(apiDir, p.pkg)).isDirectory()) {
+          rmSync(stub);
+        }
+      }
+      const modulesStub = join(apiDir, 'modules.md');
+      if (existsSync(modulesStub)) rmSync(modulesStub);
       writeFileSync(join(apiDir, 'index.md'), renderApiIndex(driver, apiPackages));
       log(`${driver.name}: wrote api/index.md (${apiPackages.length} package${apiPackages.length === 1 ? '' : 's'})`);
     }
