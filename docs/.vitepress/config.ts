@@ -9,9 +9,13 @@ export default defineConfig({
   // - localhostLinks: dev-time references to local servers
   // - ./LICENSE in typedoc-generated api/README.md files: that LICENSE lives
   //   in the source repo, not in the docs site
+  // - ./{core,node,web,cli}/dist/README inside <driver>/api/index.md: typedoc
+  //   package-landing links that VitePress + cleanUrls mishandles even though
+  //   README.md exists at the resolved path on disk
   ignoreDeadLinks: [
     'localhostLinks',
     /^\.\/LICENSE$/,
+    /^\.\/(core|node|web|cli)\/dist\/README$/,
   ],
 
   // Exclude include-only fragments from routing.
@@ -97,6 +101,11 @@ export default defineConfig({
             { text: 'PT raster', link: '/brother-ql/protocol/pt' },
           ],
         },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/brother-ql/api/' }],
+        },
       ],
 
       '/labelmanager/': [
@@ -116,6 +125,11 @@ export default defineConfig({
         {
           text: 'Wire protocols',
           items: [{ text: 'D1 tape', link: '/labelmanager/protocol' }],
+        },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/labelmanager/api/' }],
         },
       ],
 
@@ -141,6 +155,11 @@ export default defineConfig({
             { text: 'LW 550 raster', link: '/labelwriter/protocol/lw-550' },
             { text: 'Duo tape', link: '/labelwriter/protocol/duo-tape' },
           ],
+        },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/labelwriter/api/' }],
         },
       ],
 

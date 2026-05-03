@@ -16,7 +16,7 @@
 //
 // Schema reference: @thermal-label/contracts DeviceEntry / MediaDescriptor.
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -65,7 +65,7 @@ const STATUS_LABEL_INLINE = {
   verified: '✅ verified',
   partial:  '⚠️ partial',
   broken:   '❌ broken',
-  untested: 'untested',
+  untested: '⏳ untested',
 };
 
 const TRANSPORT_LABEL = {
@@ -74,6 +74,23 @@ const TRANSPORT_LABEL = {
   serial: 'Serial',
   'bluetooth-spp': 'Bluetooth SPP',
   'bluetooth-gatt': 'Bluetooth LE',
+};
+
+// Family colour squares match the homepage hero blocks.
+const FAMILY_GLYPH = {
+  'brother-ql':   '🟦',
+  'labelmanager': '🟧',
+  'labelwriter':  '🟥',
+};
+
+// One glyph per transport type. SPP and GATT share 📶 — both wireless,
+// the per-row "Bluetooth SPP" / "Bluetooth LE" label disambiguates.
+const TRANSPORT_GLYPH = {
+  usb:              '🔌',
+  tcp:              '🌐',
+  serial:           '🔗',
+  'bluetooth-spp':  '📶',
+  'bluetooth-gatt': '📶',
 };
 
 // Named PrintEngineCapabilities keys from contracts. Driver-side
@@ -148,6 +165,14 @@ function transportShortLabel(t) {
   return TRANSPORT_LABEL[t] ?? t;
 }
 
+function familyGlyph(family) {
+  return FAMILY_GLYPH[family] ?? '⬜';
+}
+
+function transportGlyph(t) {
+  return TRANSPORT_GLYPH[t] ?? '🔌';
+}
+
 function escapeYamlValue(v) {
   return String(v).replace(/"/g, '\\"');
 }
@@ -191,33 +216,44 @@ function renderChassisCapabilities(dev) {
   return parts;
 }
 
-function renderTransportEntry(name, params, support) {
-  const status = support?.transports?.[name];
-  const tag = status ? ` · ${statusBadgeInline(status)}` : '';
+function transportDetails(name, params) {
   switch (name) {
     case 'usb':
-      return `- **USB** — VID \`${params.vid}\`, PID \`${params.pid}\`${tag}`;
+      return `VID \`${params.vid}\`, PID \`${params.pid}\``;
     case 'tcp': {
       const mdns = params.mdns ? `, mDNS \`${params.mdns.serviceType}\`` : '';
-      return `- **TCP** — port ${params.port}${mdns}${tag}`;
+      return `port ${params.port}${mdns}`;
     }
     case 'serial': {
       const extra = params.supportedBauds && params.supportedBauds.length > 1
         ? ` (also: ${params.supportedBauds.filter(b => b !== params.defaultBaud).join(', ')})`
         : '';
-      return `- **Serial** — default ${params.defaultBaud} baud${extra}${tag}`;
+      return `default ${params.defaultBaud} baud${extra}`;
     }
-    case 'bluetooth-spp': {
-      const np = params.namePrefix ? `name prefix "${params.namePrefix}"` : 'classic Bluetooth SPP';
-      return `- **Bluetooth SPP** — ${np}${tag}`;
-    }
+    case 'bluetooth-spp':
+      return params.namePrefix ? `name prefix \`${params.namePrefix}\`` : 'classic Bluetooth SPP';
     case 'bluetooth-gatt': {
-      const np = params.namePrefix ? `, name prefix "${params.namePrefix}"` : '';
-      return `- **Bluetooth LE** — service \`${params.serviceUuid}\`${np}${tag}`;
+      const np = params.namePrefix ? `, name prefix \`${params.namePrefix}\`` : '';
+      return `service \`${params.serviceUuid}\`${np}`;
     }
     default:
-      return `- **${name}** — ${JSON.stringify(params)}${tag}`;
+      return `\`${JSON.stringify(params)}\``;
   }
+}
+
+function renderConnectivityTable(transports, support) {
+  if (transports.length === 0) return '_No transports declared._';
+  const lines = [
+    '| Transport | Details | Status |',
+    '| --- | --- | --- |',
+  ];
+  for (const [name, params] of transports) {
+    const st = support?.transports?.[name];
+    lines.push(
+      `| ${transportGlyph(name)} **${transportShortLabel(name)}** | ${transportDetails(name, params)} | ${st ? statusBadgeInline(st) : '—'} |`,
+    );
+  }
+  return lines.join('\n');
 }
 
 function renderProtocolBadge(family, protocol) {
@@ -233,27 +269,32 @@ function renderProtocolBadge(family, protocol) {
   return url === null ? `\`${protocol}\`` : `[\`${protocol}\`](${url})`;
 }
 
-function renderEngine(engine, support, family) {
-  const lines = [];
-  const parts = [
-    `${engine.dpi} dpi`,
-    `${engine.headDots}-dot head`,
-    renderProtocolBadge(family, engine.protocol),
+function renderEnginesTable(engines, support, family) {
+  if (engines.length === 0) return '_No engines declared._';
+  const lines = [
+    '| Role | Resolution | Head | Protocol | Media | Capabilities | Status |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
   ];
-  if (engine.mediaCompatibility?.length) {
-    parts.push(`media: ${engine.mediaCompatibility.join(', ')}`);
+  for (const e of engines) {
+    const caps = renderEngineCapabilities(e);
+    if (e.bind?.usb?.bInterfaceNumber !== undefined) {
+      caps.push(`USB interface ${e.bind.usb.bInterfaceNumber}`);
+    }
+    if (e.bind?.address !== undefined) {
+      caps.push(`protocol address ${e.bind.address}`);
+    }
+    const st = support?.engines?.[e.role];
+    const cells = [
+      `**${e.role}**`,
+      `${e.dpi} dpi`,
+      `${e.headDots} dots`,
+      renderProtocolBadge(family, e.protocol),
+      e.mediaCompatibility?.length ? e.mediaCompatibility.join(', ') : '—',
+      caps.length ? caps.join(', ') : '—',
+      st ? statusBadgeInline(st) : '—',
+    ];
+    lines.push(`| ${cells.join(' | ')} |`);
   }
-  for (const cap of renderEngineCapabilities(engine)) parts.push(cap);
-  if (engine.bind?.usb?.bInterfaceNumber !== undefined) {
-    parts.push(`USB interface ${engine.bind.usb.bInterfaceNumber}`);
-  }
-  if (engine.bind?.address !== undefined) {
-    parts.push(`protocol address ${engine.bind.address}`);
-  }
-  const status = support?.engines?.[engine.role];
-  if (status) parts.push(statusBadgeInline(status));
-
-  lines.push(`**${engine.role}** — ${parts.join(' · ')}`);
   return lines.join('\n');
 }
 
@@ -269,9 +310,13 @@ function renderMediaTable(media) {
   return lines.join('\n');
 }
 
-function renderReports(support) {
+function renderReports(support, hasIssues) {
   const reports = support?.reports ?? [];
-  if (reports.length === 0) return '_No reports yet._';
+  if (reports.length === 0) {
+    return hasIssues
+      ? '_Be the first — see the **Help verify this printer** card at the top of the page._'
+      : '_No reports yet._';
+  }
   const lines = [];
   for (const r of reports) {
     const self = r.selfVerified ? ' _(self-verified)_' : '';
@@ -288,8 +333,8 @@ function buildIssueUrl(base, title, body) {
   return `${base}/new?${params.toString()}`;
 }
 
-function ctaBlock(dev, driver, issuesUrl) {
-  if (!issuesUrl) return '';
+function buildIssueLinks(dev, issuesUrl) {
+  if (!issuesUrl) return null;
   const transports = Object.keys(dev.transports ?? {}).map(transportShortLabel).join(' · ') || '—';
   const verifyTitle = `Verification report: ${dev.name}`;
   const verifyBody = [
@@ -318,48 +363,133 @@ function ctaBlock(dev, driver, issuesUrl) {
     '',
     '**Steps to reproduce:**',
   ].join('\n');
-  const verifyHref = buildIssueUrl(issuesUrl, verifyTitle, verifyBody);
-  const bugHref = buildIssueUrl(issuesUrl, bugTitle, bugBody);
+  return {
+    verify: buildIssueUrl(issuesUrl, verifyTitle, verifyBody),
+    bug:    buildIssueUrl(issuesUrl, bugTitle, bugBody),
+  };
+}
+
+function renderHero(dev, driver, issuesUrl) {
+  const links = buildIssueLinks(dev, issuesUrl);
+  if (!links) return '';
+  const status = dev.support?.status ?? 'untested';
+
+  // Untested + broken: emphasise the verify ask. Verified + partial:
+  // tone is "your refresh report still helps" but less urgent.
+  const lead = (status === 'untested' || status === 'broken')
+    ? `Got a **${dev.name}**? A two-minute test report turns this from **${statusBadgeInline(status)}** into **✅ verified** for everyone who buys the same model.`
+    : `Got a **${dev.name}**? A fresh test report against the latest \`${driver.pkg}\` keeps this entry honest — driver versions move faster than verifications.`;
+
   return [
-    `[**Have one of these? File a verification report →**](${verifyHref})`,
-    `[**Found a bug? →**](${bugHref})`,
+    '::: info ✋ Help verify this printer',
+    lead,
+    '',
+    `[**File a test report →**](${links.verify})  `,
+    `[**Report a bug →**](${links.bug})`,
+    ':::',
+  ].join('\n');
+}
+
+function renderFooterCta(dev, issuesUrl) {
+  const links = buildIssueLinks(dev, issuesUrl);
+  if (!links) return '';
+  return [
+    `[**Have one of these? File a verification report →**](${links.verify})`,
+    `[**Found a bug? →**](${links.bug})`,
   ].join('  \n');
+}
+
+function renderAtAGlance(dev, driver, pkgVersion) {
+  const status = dev.support?.status ?? 'untested';
+  const transports = Object.keys(dev.transports ?? {});
+  const engines = dev.engines ?? [];
+
+  const transportsCell = transports.length === 0
+    ? '—'
+    : transports.map(t => `${transportGlyph(t)} ${transportShortLabel(t)}`).join(' · ');
+
+  const headCell = engines.length === 0
+    ? '—'
+    : engines.length === 1
+      ? `${engines[0].headDots} dots @ ${engines[0].dpi} dpi`
+      : engines.map(e => `${e.headDots} dots @ ${e.dpi} dpi (${e.role})`).join(' · ');
+
+  const protocolCell = engines.length === 0
+    ? '—'
+    : engines.map(e => renderProtocolBadge(dev.family, e.protocol)).join(' · ');
+
+  const supportPkgVersion = dev.support?.packageVersion;
+  const pkgCell = supportPkgVersion
+    ? `\`${driver.pkg}@${supportPkgVersion}\``
+    : `\`${driver.pkg}@${pkgVersion}\``;
+
+  const lastVerifiedCell = dev.support?.lastVerified
+    ? `📅 ${dev.support.lastVerified}`
+    : '—';
+
+  const lines = [
+    '| | |',
+    '| --- | --- |',
+    `| ${familyGlyph(dev.family)} **Family** | ${driver.displayName} |`,
+    `| 🩺 **Status** | **${statusBadgeInline(status)}** |`,
+    `| 🔌 **Transports** | ${transportsCell} |`,
+    `| 📐 **Print head** | ${headCell} |`,
+    `| 📡 **Protocol** | ${protocolCell} |`,
+    `| 📦 **Package** | ${pkgCell} |`,
+    `| 📅 **Last verified** | ${lastVerifiedCell} |`,
+  ];
+  return lines.join('\n');
 }
 
 function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   const status = dev.support?.status ?? 'untested';
   const transports = Object.entries(dev.transports ?? {});
-  const transportStrip = transports.map(([t]) => transportShortLabel(t)).join(' · ') || '—';
-  const lastVerified = dev.support?.lastVerified;
-  const supportPkgVersion = dev.support?.packageVersion;
-
-  const subline = [];
-  if (lastVerified) subline.push(`Last verified ${lastVerified}`);
-  if (supportPkgVersion) subline.push(`tested against \`${driver.pkg}@${supportPkgVersion}\``);
-  const subtitle = subline.length > 0
-    ? subline.join(' · ')
-    : `Currently in \`${driver.pkg}@${pkgVersion}\` — no public verification reports yet.`;
-
   const chassisCaps = renderChassisCapabilities(dev);
   const hasQuirks = !!(dev.hardwareQuirks || dev.support?.quirks);
 
   const sections = [];
-  sections.push(`# ${dev.name}`);
-  sections.push(`**${statusBadgeInline(status)}** · ${transportStrip}  \n${subtitle}`);
+
+  // Title with the family colour square — same vocabulary as the
+  // homepage hero blocks.
+  sections.push(`# ${familyGlyph(dev.family)} ${dev.name}`);
+
+  // One-line status / transports strip under the title. The transport
+  // glyphs let the eye locate "USB-only" vs "wireless" without reading.
+  const transportPills = transports.length > 0
+    ? transports.map(([t]) => `${transportGlyph(t)} ${transportShortLabel(t)}`).join(' · ')
+    : '—';
+  sections.push(`**${statusBadgeInline(status)}** · ${transportPills}`);
+
+  // Hero CTA — first thing under the strip. Inviting test reports is
+  // the highest-value action a visitor can take, so the ask leads.
+  const hero = renderHero(dev, driver, issuesUrl);
+  if (hero) sections.push(hero);
+
+  // At a glance — table of high-density facts. Replaces the prose
+  // subtitle and consolidates head / protocol / package / last-verified
+  // in one scannable block.
+  sections.push('## At a glance');
+  sections.push(renderAtAGlance(dev, driver, pkgVersion));
 
   sections.push('## Engines');
-  sections.push((dev.engines ?? []).map(e => renderEngine(e, dev.support, dev.family)).join('\n\n'));
+  sections.push(renderEnginesTable(dev.engines ?? [], dev.support, dev.family));
 
   sections.push('## Connectivity');
-  sections.push(transports.map(([name, params]) => renderTransportEntry(name, params, dev.support)).join('\n'));
+  sections.push(renderConnectivityTable(transports, dev.support));
   if (chassisCaps.length > 0) {
     sections.push(`**Chassis features:** ${chassisCaps.join(', ')}`);
   }
 
   if (hasQuirks) {
-    sections.push('## Quirks');
-    if (dev.hardwareQuirks) sections.push(dev.hardwareQuirks);
-    if (dev.support?.quirks) sections.push(`> ${dev.support.quirks.replace(/\n/g, '\n> ')}`);
+    sections.push('## Hardware quirks');
+    const quirkParts = [];
+    if (dev.hardwareQuirks) quirkParts.push(dev.hardwareQuirks);
+    if (dev.support?.quirks) quirkParts.push(dev.support.quirks);
+    sections.push([
+      '::: warning Read before integrating',
+      quirkParts.join('\n\n'),
+      ':::',
+    ].join('\n'));
   }
 
   sections.push('## Supported media');
@@ -374,12 +504,12 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   }
 
   sections.push('## Verification reports');
-  sections.push(renderReports(dev.support));
+  sections.push(renderReports(dev.support, !!issuesUrl));
 
-  const cta = ctaBlock(dev, driver, issuesUrl);
-  if (cta) {
+  const footerCta = renderFooterCta(dev, issuesUrl);
+  if (footerCta) {
     sections.push('---');
-    sections.push(cta);
+    sections.push(footerCta);
   }
 
   // Frontmatter — give the page a title VitePress can use, and hide
@@ -400,6 +530,9 @@ function renderIndexPage(data) {
   return `---
 title: Hardware
 description: Every device supported by the thermal-label drivers, with community-verified status.
+sidebar: false
+aside: false
+pageClass: hardware-page
 ---
 
 <script setup>
@@ -408,9 +541,11 @@ import HardwareTable from '../.vitepress/components/HardwareTable.vue';
 
 # Hardware coverage
 
-Every device in the contracts-shape \`DEVICES\` registry of every
-thermal-label driver. Each row links to a per-device page with
-transports, engines, supported media, and verification reports.
+<ClientOnly>
+  <HardwareTable />
+</ClientOnly>
+
+## Coverage stats
 
 - **Total devices:** ${c.total}
 - **Verified:** ${c.verified}
@@ -418,9 +553,9 @@ transports, engines, supported media, and verification reports.
 - **Broken:** ${c.broken}
 - **Untested:** ${c.untested}
 
-The table below is **interactive**: filter by family, transport, or
-status, type to search by model name. Click a row to open its detail
-page.
+Every device in the contracts-shape \`DEVICES\` registry of every
+thermal-label driver. Each row links to a per-device page with
+transports, engines, supported media, and verification reports.
 
 ::: tip Verify your device
 A two-minute test helps everyone who buys one of these printers. See
@@ -428,18 +563,211 @@ the [verification guide](https://github.com/thermal-label/.github/blob/main/CONT
 for what to run and how to file a report.
 :::
 
-## All devices
-
-<ClientOnly>
-  <HardwareTable />
-</ClientOnly>
-
----
-
 <small>Generated ${data.generatedAt} from \`@thermal-label/*-core\`
 \`DEVICES\` registries. The data file lives at \`/hardware/_data.json\`
 if you need to consume it programmatically.</small>
 `;
+}
+
+// Per-driver overview metadata used by renderDriverIndex. Each driver
+// gets a tagline, a one-line description per known doc page, and a list
+// of protocol pages to surface. The page-list entries are filtered
+// against the actually-pulled tree, so a driver dropping (or renaming)
+// a page removes it from the index without touching this script.
+const DRIVER_OVERVIEWS = {
+  'brother-ql': {
+    tagline:
+      'TypeScript driver for the Brother QL DK-tape series and the Brother PT-P / PT-E TZe / HSe tape series. Talks USB, TCP, Bluetooth SPP and Bluetooth LE.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, registries, raster encoder. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'USB (libusb), TCP, and Serial transports for Node.' },
+      { slug: 'web',                   title: 'Web (WebUSB)',            desc: 'WebUSB and Web Bluetooth in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+      { slug: 'media',                 title: 'Media',                   desc: 'DK / TZe / HSe roll catalog.' },
+      { slug: 'troubleshooting',       title: 'Troubleshooting',         desc: 'Common failure modes and how to read status frames.' },
+    ],
+    demoLink: '/demo/brother-ql',
+    protocols: [
+      { href: '/brother-ql/protocol/ql', title: 'QL raster', desc: 'DK-tape QL series, including two-colour QL-800 / QL-810W / QL-820NWB.' },
+      { href: '/brother-ql/protocol/pt', title: 'PT raster', desc: 'PT-P / PT-E P-touch lineup, 128-pin and 560-pin heads, TZe + HSe.' },
+    ],
+  },
+  labelmanager: {
+    tagline:
+      'TypeScript driver for the DYMO LabelManager D1 tape lineup. USB and Bluetooth LE; single-colour thermal-transfer tape from 6 mm up to 24 mm.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, encoder, D1 command stream. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'USB and Serial transports for Node.' },
+      { slug: 'web',                   title: 'Web',                     desc: 'WebUSB and Web Bluetooth in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    demoLink: '/demo/labelmanager',
+    protocols: [
+      { href: '/labelmanager/protocol', title: 'D1 tape', desc: 'LabelManager command stream over USB and BLE.' },
+    ],
+  },
+  labelwriter: {
+    tagline:
+      'TypeScript driver for the DYMO LabelWriter die-cut series — LW 4xx, LW 5xx, the 4XL/5XL wide formats, and the LW 450 Duo composite. USB, TCP, and (where supported) Web Bluetooth.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, registries, raster encoders for LW 450 / LW 550 / Duo tape.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'USB (libusb) and TCP transports for Node.' },
+      { slug: 'web',                   title: 'Web (WebUSB)',            desc: 'WebUSB pairing and printing in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages, including the 550-series NFC media gate.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    demoLink: '/demo/labelwriter',
+    protocols: [
+      { href: '/labelwriter/protocol/lw-450',   title: 'LW 450 raster',  desc: 'Classic LW 4xx generation.' },
+      { href: '/labelwriter/protocol/lw-550',   title: 'LW 550 raster',  desc: 'Current LW 5xx generation, including NFC media validation.' },
+      { href: '/labelwriter/protocol/duo-tape', title: 'Duo tape',       desc: 'The second interface on the LW 450 Duo.' },
+    ],
+    callout: {
+      kind: 'warning',
+      title: '550 series NFC label lock',
+      body: 'The LabelWriter 550, 550 Turbo, and 5XL enforce NFC chip validation on every print job. **Non-certified labels are rejected at the hardware level** — there is no software workaround. See the [hardware list](./hardware) for the full model list.',
+    },
+  },
+};
+
+function renderDriverIndex(driver, pkgVersion, deviceCount) {
+  const overview = DRIVER_OVERVIEWS[driver.name];
+  if (!overview) {
+    die(`no DRIVER_OVERVIEWS entry for ${driver.name} — add one or remove the driver from DRIVERS`);
+  }
+
+  const driverDir = join(DOCS_ROOT, driver.name);
+  const present = (slug) => existsSync(join(driverDir, slug + '.md')) || existsSync(join(driverDir, slug, 'index.md'));
+  const pages = overview.pages.filter(p => present(p.slug));
+  const docLines = pages.map(p => `- [${p.title}](./${p.slug}) — ${p.desc}`);
+  if (overview.demoLink) {
+    docLines.push(`- [Live demo](${overview.demoLink}) — pair a printer over WebUSB and print from this site.`);
+  }
+
+  const familyParam = encodeURIComponent(driver.displayName);
+  const corePkg = `${driver.pkg.replace(/-core$/, '')}`;
+  const npmHref = `https://www.npmjs.com/package/${driver.pkg}`;
+  const ghHref = `https://github.com/thermal-label/${driver.name}`;
+
+  const sections = [];
+  sections.push(`# ${corePkg}-*`);
+  sections.push(overview.tagline);
+  sections.push(
+    `**${deviceCount} supported devices** · current version \`${pkgVersion}\` · ` +
+    `[browse hardware coverage →](/hardware/#family=${familyParam})`,
+  );
+  sections.push('## Packages');
+  sections.push([
+    `- [\`${corePkg}-core\`](./core) — types, registries, encoders. Safe in Node and browsers.`,
+    present('node') ? `- [\`${corePkg}-node\`](./node) — Node-side transports and adapter.` : null,
+    present('web')  ? `- [\`${corePkg}-web\`](./web) — browser-side transports and adapter.` : null,
+  ].filter(Boolean).join('\n'));
+
+  sections.push('## Documentation');
+  sections.push(docLines.join('\n'));
+
+  if (existsSync(join(driverDir, 'api'))) {
+    sections.push('## API reference');
+    sections.push(
+      `TypeDoc-generated reference for the published packages — ` +
+      `[browse the API tree →](./api/).`,
+    );
+  }
+
+  if (overview.protocols.length > 0) {
+    sections.push('## Wire protocols');
+    sections.push(overview.protocols.map(p => `- [${p.title}](${p.href}) — ${p.desc}`).join('\n'));
+  }
+
+  if (overview.callout) {
+    sections.push(`::: ${overview.callout.kind} ${overview.callout.title}\n${overview.callout.body}\n:::`);
+  }
+
+  sections.push('## Source');
+  sections.push(`[${ghHref.replace('https://', '')}](${ghHref}) · [npm: \`${driver.pkg}\`](${npmHref})`);
+
+  const frontmatter = [
+    '---',
+    `title: ${escapeYamlValue(driver.displayName)}`,
+    `description: ${escapeYamlValue(`${driver.displayName} TypeScript driver — Node, browser, hardware, wire protocol, and live demo.`)}`,
+    '---',
+    '',
+  ].join('\n');
+
+  return frontmatter + sections.join('\n\n') + '\n';
+}
+
+// Walk a pulled `<driver>/api/` tree and return one entry per published
+// package whose typedoc README we found. The layout is inconsistent
+// across drivers (typedoc entry-point quirks): brother-ql wraps in
+// `@thermal-label/<pkg>/`, labelmanager nests in `<pkg>/dist/`,
+// labelwriter in `<pkg>/src/`. The detection covers all three shapes.
+function detectApiPackages(apiDir) {
+  if (!existsSync(apiDir)) return [];
+  const out = [];
+
+  const scoped = join(apiDir, '@thermal-label');
+  if (existsSync(scoped) && statSync(scoped).isDirectory()) {
+    for (const pkg of readdirSync(scoped).sort()) {
+      const readme = join(scoped, pkg, 'README.md');
+      if (existsSync(readme)) out.push({ pkg, href: `./@thermal-label/${pkg}/README.md` });
+    }
+    return out;
+  }
+
+  for (const name of readdirSync(apiDir).sort()) {
+    const dirPath = join(apiDir, name);
+    if (!statSync(dirPath).isDirectory()) continue;
+    for (const inner of ['', 'dist', 'src']) {
+      const readme = inner ? join(dirPath, inner, 'README.md') : join(dirPath, 'README.md');
+      if (existsSync(readme)) {
+        const href = inner ? `./${name}/${inner}/README.md` : `./${name}/README.md`;
+        out.push({ pkg: name, href });
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+// Generate the landing page at `<driver>/api/index.md` so `/<driver>/api/`
+// resolves cleanly. The typedoc tree itself stays untouched — we just
+// add a friendly index that links to each per-package README.
+function renderApiIndex(driver, packages) {
+  const corePkg = driver.pkg.replace(/-core$/, '');
+  const lines = packages.map(p => {
+    const fullName = p.pkg.startsWith('@') ? p.pkg : `@thermal-label/${p.pkg}`;
+    return `- [\`${fullName}\`](${p.href}) — TypeDoc-generated reference.`;
+  });
+
+  const sections = [
+    `# ${driver.displayName} — API reference`,
+    `Generated TypeDoc reference for every package in the \`${corePkg}-*\` family. ` +
+    `These pages cover the **public surface** — exported classes, interfaces, ` +
+    `functions, type aliases, and variables. ` +
+    `For installation, examples, and the wire-protocol references, ` +
+    `start at the [${driver.displayName} overview](../).`,
+    '## Packages',
+    lines.length > 0 ? lines.join('\n') : '_No TypeDoc packages detected — re-run `pnpm docs:api` in the driver repo._',
+    '::: info Want a guided tour first?',
+    `The [${driver.displayName} overview](../) lists installation, transports, hardware, and wire protocols before you dive into the typed API.`,
+    ':::',
+  ];
+
+  const frontmatter = [
+    '---',
+    `title: ${escapeYamlValue(`API reference — ${driver.displayName}`)}`,
+    `description: ${escapeYamlValue(`TypeDoc-generated API reference for the ${corePkg}-* packages.`)}`,
+    '---',
+    '',
+  ].join('\n');
+
+  return frontmatter + sections.join('\n\n') + '\n';
 }
 
 function renderLegacyFragment(driver) {
@@ -511,6 +839,25 @@ async function main() {
       version: pkgJson.version,
       totalDevices: devices.length,
     });
+
+    // Replace the pulled-from-upstream `<driver>/index.md` (a hero
+    // landing whose links assume the driver had its own VitePress site
+    // mounted at /) with a generated overview that uses correct
+    // /<driver>/* paths and surfaces only the pages actually present.
+    writeFileSync(
+      join(HW_ROOT, '..', driver.name, 'index.md'),
+      renderDriverIndex(driver, pkgJson.version, devices.length),
+    );
+
+    // If the driver shipped a typedoc tree under `<driver>/api/`, drop
+    // an index page on top so `/<driver>/api/` resolves and visitors
+    // get a per-package landing instead of a 404 / raw README.
+    const apiDir = join(DOCS_ROOT, driver.name, 'api');
+    const apiPackages = detectApiPackages(apiDir);
+    if (apiPackages.length > 0) {
+      writeFileSync(join(apiDir, 'index.md'), renderApiIndex(driver, apiPackages));
+      log(`${driver.name}: wrote api/index.md (${apiPackages.length} package${apiPackages.length === 1 ? '' : 's'})`);
+    }
 
     // Stub the legacy include target. Driver-repo `docs/hardware.md`
     // still has `<!--@include: ./_status-fragment.md-->` until each
