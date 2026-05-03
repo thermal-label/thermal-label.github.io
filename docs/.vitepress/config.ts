@@ -186,9 +186,45 @@ export default defineConfig({
     },
 
     socialLinks: [{ icon: 'github', link: 'https://github.com/thermal-label' }],
+
+    // Per-section "Edit this page" routing. Most page paths under
+    // docs/<repo>/ are pulled from sibling driver repos by
+    // scripts/pull-driver-docs.mjs, so an edit on those needs to land
+    // in the upstream repo, not this docs site. Generated landings
+    // (hardware index, per-driver overview, api/index) point at the
+    // build script that produces them. Per-device hardware pages set
+    // `editLink: false` in their own frontmatter and ship a custom
+    // "Edit device data" link straight to `data/devices/<KEY>.json5`,
+    // so they never reach this function.
+    editLink: {
+      pattern: ({ filePath }) => {
+        const ORG = 'thermal-label';
+        const SITE_REPO = 'thermal-label.github.io';
+        const PULLED = ['contracts', 'transport', 'brother-ql', 'labelmanager', 'labelwriter', 'cli'];
+
+        if (filePath === 'hardware/index.md') {
+          return `https://github.com/${ORG}/${SITE_REPO}/edit/main/scripts/build-hardware-page.mjs`;
+        }
+
+        const generatedLanding = filePath.match(/^([^/]+)\/(?:index\.md|api\/index\.md)$/);
+        if (generatedLanding && PULLED.includes(generatedLanding[1])) {
+          return `https://github.com/${ORG}/${SITE_REPO}/edit/main/scripts/build-hardware-page.mjs`;
+        }
+
+        const pulled = PULLED.find(r => filePath.startsWith(r + '/'));
+        if (pulled) {
+          const inner = filePath.slice(pulled.length + 1);
+          return `https://github.com/${ORG}/${pulled}/edit/main/docs/${inner}`;
+        }
+
+        return `https://github.com/${ORG}/${SITE_REPO}/edit/main/docs/${filePath}`;
+      },
+      text: 'Edit this page on GitHub',
+    },
+
     footer: {
       message:
-        'MIT licensed projects. Not affiliated with printer manufacturers. <a href="https://github.com/sponsors/mannes" rel="noopener noreferrer">Sponsor on GitHub</a>',
+        'MIT licensed projects. Not affiliated with printer manufacturers. <a href="https://github.com/thermal-label/thermal-label.github.io/issues/new?labels=docs&title=Docs+error%3A+" rel="noopener">Report a docs error</a> · <a href="https://github.com/sponsors/mannes" rel="noopener noreferrer">Sponsor on GitHub</a>',
       copyright: 'Copyright © thermal-label',
     },
     search: { provider: 'local' },

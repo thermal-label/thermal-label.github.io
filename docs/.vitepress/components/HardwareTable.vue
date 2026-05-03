@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import data from '../../hardware/_data.json';
+import MultiSelectDropdown from './MultiSelectDropdown.vue';
 
 interface Row {
   key: string;
@@ -203,85 +204,79 @@ watch([selectedFamilies, selectedStatuses, selectedTransports, search, sortKey, 
 function transportTagLabel(t: string): string {
   return TRANSPORT_LABEL[t] ?? t;
 }
+
+// Per-facet counts so dropdown options can show how many devices each
+// option matches. Counted across the full dataset (not the currently
+// filtered set) so a user can see the size of each bucket before clicking.
+const familyCounts = computed(() => {
+  const m: Record<string, number> = {};
+  for (const r of allRows) m[r.family] = (m[r.family] ?? 0) + 1;
+  return m;
+});
+const transportCounts = computed(() => {
+  const m: Record<string, number> = {};
+  for (const r of allRows) for (const t of r.transports) m[t] = (m[t] ?? 0) + 1;
+  return m;
+});
+
+const familyOptions = computed(() =>
+  familyList.map(f => ({ value: f, label: f, count: familyCounts.value[f] ?? 0 })),
+);
+const statusOptions = computed(() =>
+  STATUS_LIST.map(s => ({ value: s, label: STATUS_LABEL[s], count: counts.value[s] })),
+);
+const transportOptions = computed(() =>
+  TRANSPORT_LIST.map(t => ({ value: t, label: TRANSPORT_LABEL[t], count: transportCounts.value[t] ?? 0 })),
+);
+
+function clearFamilies() { selectedFamilies.value = new Set(); }
+function clearStatuses() { selectedStatuses.value = new Set(); }
+function clearTransports() { selectedTransports.value = new Set(); }
 </script>
 
 <template>
   <div class="hw-table-root">
-    <!-- Filter chips + search -->
+    <!-- Compact single-line controls: search + multi-selects + clear -->
     <div class="hw-controls">
-      <label class="hw-search-label">
-        <span class="hw-search-text">Search</span>
-        <input
-          v-model="search"
-          class="hw-search-input"
-          type="search"
-          placeholder="Model name or key (e.g. QL-820, LW_450)"
-          aria-label="Search by model name or key"
-        />
-      </label>
-
-      <div class="hw-facet">
-        <h4 class="hw-facet-title">Family</h4>
-        <div class="hw-chips">
-          <button
-            v-for="f in familyList"
-            :key="f"
-            class="hw-chip"
-            :class="{ active: selectedFamilies.has(f) }"
-            :aria-pressed="selectedFamilies.has(f)"
-            @click="toggleSet(selectedFamilies, f)"
-          >
-            {{ f }}
-          </button>
-        </div>
-      </div>
-
-      <div class="hw-facet">
-        <h4 class="hw-facet-title">Status</h4>
-        <div class="hw-chips">
-          <button
-            v-for="s in STATUS_LIST"
-            :key="s"
-            class="hw-chip"
-            :class="['hw-chip-' + s, { active: selectedStatuses.has(s) }]"
-            :aria-pressed="selectedStatuses.has(s)"
-            @click="toggleSet(selectedStatuses, s)"
-          >
-            {{ STATUS_LABEL[s] }} ({{ counts[s] }})
-          </button>
-        </div>
-      </div>
-
-      <div class="hw-facet">
-        <h4 class="hw-facet-title">Transport</h4>
-        <div class="hw-chips">
-          <button
-            v-for="t in TRANSPORT_LIST"
-            :key="t"
-            class="hw-chip"
-            :class="{ active: selectedTransports.has(t) }"
-            :aria-pressed="selectedTransports.has(t)"
-            @click="toggleSet(selectedTransports, t)"
-          >
-            {{ transportTagLabel(t) }}
-          </button>
-        </div>
-      </div>
-
-      <div class="hw-facet hw-facet-toggle">
-        <button
-          class="hw-clear"
-          @click="clearAll"
-          :disabled="selectedFamilies.size === 0 && selectedStatuses.size === 0 && selectedTransports.size === 0 && !search"
-        >
-          Clear filters
-        </button>
-      </div>
+      <input
+        v-model="search"
+        class="hw-search-input"
+        type="search"
+        placeholder="Search model (e.g. QL-820, LW_450)"
+        aria-label="Search by model name or key"
+      />
+      <MultiSelectDropdown
+        label="Family"
+        :options="familyOptions"
+        :selected="selectedFamilies"
+        @toggle="(v) => toggleSet(selectedFamilies, v)"
+        @clear="clearFamilies"
+      />
+      <MultiSelectDropdown
+        label="Status"
+        :options="statusOptions"
+        :selected="selectedStatuses"
+        @toggle="(v) => toggleSet(selectedStatuses, v)"
+        @clear="clearStatuses"
+      />
+      <MultiSelectDropdown
+        label="Transport"
+        :options="transportOptions"
+        :selected="selectedTransports"
+        @toggle="(v) => toggleSet(selectedTransports, v)"
+        @clear="clearTransports"
+      />
+      <button
+        class="hw-clear"
+        @click="clearAll"
+        :disabled="selectedFamilies.size === 0 && selectedStatuses.size === 0 && selectedTransports.size === 0 && !search"
+      >
+        Clear all
+      </button>
+      <span class="hw-result-count" aria-live="polite">
+        {{ sortedRows.length }} / {{ allRows.length }} devices
+      </span>
     </div>
-
-    <p class="hw-result-count" aria-live="polite">
-      Showing {{ sortedRows.length }} of {{ allRows.length }} devices
-    </p>
 
     <div v-if="sortedRows.length === 0" class="hw-empty">
       <p>No devices match these filters.</p>
@@ -340,77 +335,46 @@ function transportTagLabel(t: string): string {
 
 .hw-controls {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
-.hw-search-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.hw-search-text {
-  font-weight: 600;
-  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
 }
 
 .hw-search-input {
-  width: 100%;
-  padding: 0.5rem;
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 0.35rem 0.6rem;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
-}
-
-.hw-facet-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
-}
-
-.hw-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
-.hw-chip {
-  padding: 0.25rem 0.625rem;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 999px;
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-2);
   font-size: 0.8125rem;
-  cursor: pointer;
-  transition: background 120ms;
 }
 
-.hw-chip:hover {
-  background: var(--vp-c-bg-soft);
-}
-
-.hw-chip.active {
-  background: var(--vp-c-brand-soft);
-  border-color: var(--vp-c-brand);
-  color: var(--vp-c-brand);
-  font-weight: 600;
+.hw-search-input:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: -1px;
 }
 
 .hw-clear {
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.7rem;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-2);
   cursor: pointer;
   font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.hw-clear:hover:not(:disabled) {
+  border-color: var(--vp-c-brand-2);
+  color: var(--vp-c-brand-1);
 }
 
 .hw-clear:disabled {
@@ -418,16 +382,12 @@ function transportTagLabel(t: string): string {
   cursor: not-allowed;
 }
 
-.hw-facet-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .hw-result-count {
-  font-size: 0.875rem;
+  margin-left: auto;
+  font-size: 0.8125rem;
   color: var(--vp-c-text-2);
-  margin-bottom: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .hw-empty {

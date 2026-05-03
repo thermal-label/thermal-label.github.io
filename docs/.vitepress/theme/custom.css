@@ -78,6 +78,21 @@
   color: var(--vp-c-brand-1);
 }
 
+/* Hardware detail + index pages stack several markdown tables in a row
+   (At a glance, Engines, Connectivity, Supported media, Verification
+   reports). VitePress's default `display: block; overflow-x: auto`
+   shrinks each table to its content width, so consecutive tables get
+   visibly different widths and the page reads as ragged. Forcing
+   `display: table; width: 100%` aligns all of them to the same
+   left/right edges. Loses horizontal-scroll-on-overflow on these
+   pages — acceptable since these tables are not unusually wide. */
+.hardware-page .vp-doc table,
+.hardware-detail .vp-doc table {
+  display: table;
+  width: 100%;
+  table-layout: auto;
+}
+
 /* Cartridge-tape media swatches in the per-device "Supported media"
    tables. The Name cell is filled edge-to-edge with the cassette's
    actual colour so the column reads as a stripe of cassettes — easier

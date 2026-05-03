@@ -620,6 +620,7 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
     `title: ${escapeYamlValue(dev.name)}`,
     `description: ${escapeYamlValue(`${dev.name} — ${driver.displayName} hardware support, transports, supported media, and verification reports.`)}`,
     'editLink: false',
+    'pageClass: hardware-detail',
     '---',
     '',
   ].join('\n');
