@@ -12,15 +12,14 @@
   },
   "dependencies": {
     "@mbtech-nl/bitmap": "^1.2.0",
-    "@thermal-label/brother-ql-core": "^0.3.0",
-    "@thermal-label/brother-ql-web": "^0.3.0",
-    "@thermal-label/labelmanager-core": "^0.3.0",
-    "@thermal-label/labelmanager-web": "^0.3.0",
-    "@thermal-label/labelwriter-core": "^0.3.0",
-    "@thermal-label/labelwriter-web": "^0.3.0"
+    "@thermal-label/brother-ql-core": "^0.4.0",
+    "@thermal-label/brother-ql-web": "^0.4.0",
+    "@thermal-label/labelmanager-core": "^0.4.0",
+    "@thermal-label/labelmanager-web": "^0.4.0",
+    "@thermal-label/labelwriter-core": "^0.4.0",
+    "@thermal-label/labelwriter-web": "^0.4.0"
   },
   "devDependencies": {
-    "vitepress": "^1.6.3",
-    "yaml": "^2.8.3"
+    "vitepress": "^1.6.3"
   }
 }
