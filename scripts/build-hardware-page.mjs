@@ -25,10 +25,15 @@ const SITE_ROOT = resolve(SCRIPT_DIR, '..');
 const DOCS_ROOT = join(SITE_ROOT, 'docs');
 const HW_ROOT = join(DOCS_ROOT, 'hardware');
 
+const SITE_HOSTNAME = 'https://thermal-label.github.io';
+
+// Per-driver manufacturer for JSON-LD `Product.manufacturer`. Coarse for
+// OEM-mixed drivers (none yet); refines when DeviceEntry gains an
+// optional `manufacturer` field. Migrates to `drivers.json` in plan §4.
 const DRIVERS = [
-  { name: 'brother-ql',   displayName: 'Brother QL',        pkg: '@thermal-label/brother-ql-core' },
-  { name: 'labelmanager', displayName: 'DYMO LabelManager', pkg: '@thermal-label/labelmanager-core' },
-  { name: 'labelwriter',  displayName: 'DYMO LabelWriter',  pkg: '@thermal-label/labelwriter-core' },
+  { name: 'brother-ql',   displayName: 'Brother QL',        pkg: '@thermal-label/brother-ql-core',   manufacturer: 'Brother' },
+  { name: 'labelmanager', displayName: 'DYMO LabelManager', pkg: '@thermal-label/labelmanager-core', manufacturer: 'DYMO' },
+  { name: 'labelwriter',  displayName: 'DYMO LabelWriter',  pkg: '@thermal-label/labelwriter-core',  manufacturer: 'DYMO' },
 ];
 
 // Map every (family, engine.protocol) the registry surfaces to the
@@ -207,6 +212,142 @@ function transportGlyph(t) {
 
 function escapeYamlValue(v) {
   return String(v).replace(/"/g, '\\"');
+}
+
+// Emit a VitePress `head:` frontmatter block from an array of HeadConfig
+// tuples — `[tag, attrsObj]` or `[tag, attrsObj, content]`. Each entry is
+// JSON-encoded so YAML doesn't have to wrestle with `:` in values like
+// `og:title` or quoted JSON-LD. JSON is a valid YAML subset, so flow-style
+// arrays survive the YAML parser cleanly.
+function emitHeadFrontmatter(entries) {
+  if (!entries || entries.length === 0) return '';
+  return 'head:\n' + entries.map(e => '  - ' + JSON.stringify(e)).join('\n') + '\n';
+}
+
+function ogMeta(property, content) {
+  return ['meta', { property, content }];
+}
+
+function nameMeta(name, content) {
+  return ['meta', { name, content }];
+}
+
+function ldJson(obj) {
+  return ['script', { type: 'application/ld+json' }, JSON.stringify(obj)];
+}
+
+function deviceCanonicalUrl(driver, slug) {
+  return `${SITE_HOSTNAME}/hardware/${driver.name}/${slug}`;
+}
+
+function driverCanonicalUrl(driver) {
+  return `${SITE_HOSTNAME}/${driver.name}/`;
+}
+
+function hardwareIndexCanonicalUrl() {
+  return `${SITE_HOSTNAME}/hardware/`;
+}
+
+function deviceIconUrl(icon) {
+  return icon ? `${SITE_HOSTNAME}/icons/device-${icon.id}.svg` : null;
+}
+
+function buildDeviceHead(dev, driver, description) {
+  const slug = devSlug(dev.key);
+  const url = deviceCanonicalUrl(driver, slug);
+  const title = `${dev.name} — ${driver.displayName}`;
+  const icon = deviceIconFor(dev.family, dev.engines ?? []);
+  const imageUrl = deviceIconUrl(icon);
+
+  const head = [
+    ogMeta('og:title', title),
+    ogMeta('og:description', description),
+    ogMeta('og:url', url),
+    ogMeta('og:type', 'article'),
+    ogMeta('og:site_name', 'thermal-label'),
+    nameMeta('twitter:card', 'summary_large_image'),
+    nameMeta('twitter:title', title),
+    nameMeta('twitter:description', description),
+  ];
+  if (imageUrl) {
+    head.push(ogMeta('og:image', imageUrl));
+    head.push(nameMeta('twitter:image', imageUrl));
+  }
+
+  const product = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: dev.name,
+    description,
+    url,
+    manufacturer: { '@type': 'Organization', name: driver.manufacturer },
+    category: driver.displayName,
+  };
+  if (imageUrl) product.image = imageUrl;
+  head.push(ldJson(product));
+
+  return head;
+}
+
+function buildDriverHead(driver, description, deviceCount, firstDeviceIcon) {
+  const url = driverCanonicalUrl(driver);
+  const title = `${driver.displayName} — TypeScript driver`;
+  const imageUrl = deviceIconUrl(firstDeviceIcon);
+
+  const head = [
+    ogMeta('og:title', title),
+    ogMeta('og:description', description),
+    ogMeta('og:url', url),
+    ogMeta('og:type', 'website'),
+    ogMeta('og:site_name', 'thermal-label'),
+    nameMeta('twitter:card', 'summary_large_image'),
+    nameMeta('twitter:title', title),
+    nameMeta('twitter:description', description),
+  ];
+  if (imageUrl) {
+    head.push(ogMeta('og:image', imageUrl));
+    head.push(nameMeta('twitter:image', imageUrl));
+  }
+
+  head.push(ldJson({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: title,
+    description,
+    url,
+    isPartOf: { '@type': 'WebSite', name: 'thermal-label', url: SITE_HOSTNAME },
+    about: { '@type': 'Organization', name: driver.manufacturer },
+    numberOfItems: deviceCount,
+  }));
+
+  return head;
+}
+
+function buildHardwareIndexHead(description, totalDevices) {
+  const url = hardwareIndexCanonicalUrl();
+  const title = 'Hardware coverage — thermal-label';
+
+  const head = [
+    ogMeta('og:title', title),
+    ogMeta('og:description', description),
+    ogMeta('og:url', url),
+    ogMeta('og:type', 'website'),
+    ogMeta('og:site_name', 'thermal-label'),
+    nameMeta('twitter:card', 'summary'),
+    nameMeta('twitter:title', title),
+    nameMeta('twitter:description', description),
+    ldJson({
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: title,
+      description,
+      url,
+      isPartOf: { '@type': 'WebSite', name: 'thermal-label', url: SITE_HOSTNAME },
+      numberOfItems: totalDevices,
+    }),
+  ];
+
+  return head;
 }
 
 function fmtDimensions(m) {
@@ -615,12 +756,15 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   // these per-device pages from the local search if they bloat results.
   // editLink is off because the page is generated from `data/devices/<KEY>.json5`;
   // the body's footer CTA links straight to that JSON5 file instead.
+  const description = `${dev.name} — ${driver.displayName} hardware support, transports, supported media, and verification reports.`;
+  const head = buildDeviceHead(dev, driver, description);
   const frontmatter = [
     '---',
     `title: ${escapeYamlValue(dev.name)}`,
-    `description: ${escapeYamlValue(`${dev.name} — ${driver.displayName} hardware support, transports, supported media, and verification reports.`)}`,
+    `description: ${escapeYamlValue(description)}`,
     'editLink: false',
     'pageClass: hardware-detail',
+    emitHeadFrontmatter(head).trimEnd(),
     '---',
     '',
   ].join('\n');
@@ -628,14 +772,42 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   return frontmatter + sections.join('\n\n') + '\n';
 }
 
+function renderStaticFallbackTable(rows) {
+  if (rows.length === 0) return '_No devices in the registry yet._';
+  const sorted = [...rows].sort((a, b) =>
+    a.family.localeCompare(b.family) || a.name.localeCompare(b.name),
+  );
+  const lines = [
+    '| Family | Model | Transports | Status |',
+    '| --- | --- | --- | --- |',
+  ];
+  for (const r of sorted) {
+    const fam = `${familyGlyph(r.driver)} ${r.family}`;
+    const link = `[${r.name}](/hardware/${r.driver}/${r.slug})`;
+    const transports = r.transports.length === 0
+      ? '—'
+      : r.transports.map(transportShortLabel).join(' · ');
+    const status = statusBadgeInline(r.status);
+    lines.push(`| ${fam} | ${link} | ${transports} | ${status} |`);
+  }
+  return lines.join('\n');
+}
+
 function renderIndexPage(data) {
   const c = data.counts;
+  // Static fallback table — crawler / no-JS view. HardwareTable.vue sets
+  // `body.hw-table-hydrated` on mount to hide this via CSS in
+  // theme/custom.css, leaving the interactive component visible.
+  const staticTable = renderStaticFallbackTable(data.rows);
+  const description = `Every device supported by the thermal-label drivers — ${c.total} models across Brother QL, DYMO LabelManager, and DYMO LabelWriter, with community-verified status.`;
+  const head = buildHardwareIndexHead(description, c.total);
   return `---
 title: Hardware
-description: Every device supported by the thermal-label drivers, with community-verified status.
+description: ${escapeYamlValue(description)}
 sidebar: false
 aside: false
 pageClass: hardware-page
+${emitHeadFrontmatter(head).trimEnd()}
 ---
 
 <script setup>
@@ -644,9 +816,13 @@ import HardwareTable from '../.vitepress/components/HardwareTable.vue';
 
 # Hardware coverage
 
-<ClientOnly>
-  <HardwareTable />
-</ClientOnly>
+<HardwareTable />
+
+<div class="hw-static-fallback">
+
+${staticTable}
+
+</div>
 
 ## Coverage stats
 
@@ -738,11 +914,12 @@ const DRIVER_OVERVIEWS = {
   },
 };
 
-function renderDriverIndex(driver, pkgVersion, deviceCount, apiPackageCount = 0) {
+function renderDriverIndex(driver, pkgVersion, devices, apiPackageCount = 0) {
   const overview = DRIVER_OVERVIEWS[driver.name];
   if (!overview) {
     die(`no DRIVER_OVERVIEWS entry for ${driver.name} — add one or remove the driver from DRIVERS`);
   }
+  const deviceCount = devices.length;
 
   const driverDir = join(DOCS_ROOT, driver.name);
   const present = (slug) => existsSync(join(driverDir, slug + '.md')) || existsSync(join(driverDir, slug, 'index.md'));
@@ -798,10 +975,20 @@ function renderDriverIndex(driver, pkgVersion, deviceCount, apiPackageCount = 0)
   sections.push('## Source');
   sections.push(`[${ghHref.replace('https://', '')}](${ghHref}) · [npm: \`${driver.pkg}\`](${npmHref})`);
 
+  const description = `${driver.displayName} TypeScript driver — Node, browser, hardware, wire protocol, and live demo.`;
+  // Pick a representative device icon for the og:image. First device with a
+  // resolvable icon wins — driver-level hero artwork doesn't exist yet.
+  let firstIcon = null;
+  for (const dev of devices) {
+    const icon = deviceIconFor(dev.family, dev.engines ?? []);
+    if (icon) { firstIcon = icon; break; }
+  }
+  const head = buildDriverHead(driver, description, deviceCount, firstIcon);
   const frontmatter = [
     '---',
     `title: ${escapeYamlValue(driver.displayName)}`,
-    `description: ${escapeYamlValue(`${driver.displayName} TypeScript driver — Node, browser, hardware, wire protocol, and live demo.`)}`,
+    `description: ${escapeYamlValue(description)}`,
+    emitHeadFrontmatter(head).trimEnd(),
     '---',
     '',
   ].join('\n');
@@ -966,7 +1153,7 @@ async function main() {
     // /<driver>/* paths and surfaces only the pages actually present.
     writeFileSync(
       join(HW_ROOT, '..', driver.name, 'index.md'),
-      renderDriverIndex(driver, pkgJson.version, devices.length, apiPackages.length),
+      renderDriverIndex(driver, pkgJson.version, devices, apiPackages.length),
     );
 
     // If we detected typedoc packages, drop an index page on top so

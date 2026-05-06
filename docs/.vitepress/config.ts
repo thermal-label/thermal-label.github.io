@@ -5,6 +5,13 @@ export default defineConfig({
   description: 'TypeScript drivers and transports for thermal label printers.',
   cleanUrls: true,
 
+  // VitePress emits dist/sitemap.xml at build with one entry per page.
+  sitemap: { hostname: 'https://thermal-label.github.io' },
+
+  head: [
+    ['link', { rel: 'sitemap', type: 'application/xml', href: '/sitemap.xml' }],
+  ],
+
   // Per-driver content lands under docs/<repo>/ via scripts/pull-driver-docs.mjs.
   // - localhostLinks: dev-time references to local servers
   // - ./LICENSE in typedoc-generated api/README.md files: that LICENSE lives

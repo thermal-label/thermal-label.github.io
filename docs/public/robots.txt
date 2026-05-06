@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://thermal-label.github.io/sitemap.xml

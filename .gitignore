@@ -22,6 +22,7 @@ docs/cli/
 docs/public/*
 !docs/public/icons
 !docs/public/icons/**
+!docs/public/robots.txt
 
 # Generated at build time by scripts/build-hardware-page.mjs from
 # DEVICES + each driver's docs/hardware-status.yaml.

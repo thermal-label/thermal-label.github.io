@@ -185,12 +185,17 @@ onMounted(() => {
   if (typeof window !== 'undefined') {
     deserializeState(window.location.hash);
     window.addEventListener('hashchange', onHashChange);
+    // Signal to CSS that the interactive table has hydrated, so the
+    // SEO/no-JS static fallback (rendered by build-hardware-page.mjs)
+    // can hide itself. Body-level class so a single CSS rule covers it.
+    document.body.classList.add('hw-table-hydrated');
   }
 });
 
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('hashchange', onHashChange);
+    document.body.classList.remove('hw-table-hydrated');
   }
 });
 

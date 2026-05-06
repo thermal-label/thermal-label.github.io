@@ -49,6 +49,15 @@
   }
 }
 
+/* Static crawler/no-JS fallback table on /hardware/. Visible by default
+   so search bots and JS-disabled visitors see a populated table; hidden
+   once HardwareTable.vue mounts and toggles `hw-table-hydrated` on body.
+   The interactive component renders into a sibling subtree, so there's
+   no overlap to mismatch during hydration. */
+body.hw-table-hydrated .hw-static-fallback {
+  display: none;
+}
+
 /* Per-device hero icon: hand-drawn line-art SVG floated to the right of
    the title block. Uses currentColor so it picks up the page's text
    colour in both light and dark mode. Hidden on narrow screens to keep
