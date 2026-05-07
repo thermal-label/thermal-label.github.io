@@ -12,7 +12,8 @@ plan and is out of scope here.
 | §1 Static markdown table | ✅ done |
 | §2 Sitemap + robots.txt | ✅ done |
 | §3 Rich-snippet meta tags | ✅ done |
-| Build verification | ✅ done — `npm run docs:build` clean, sitemap has 280 URLs (54 per-device), robots.txt + JSON-LD Product validate |
+| §4 `drivers.json` single source of truth | ✅ done (landed alongside plan 02 matrix work) |
+| Build verification | ✅ done — `npm run docs:build` clean, sitemap has 281 URLs (54 per-device + matrix index + wishlist), robots.txt + JSON-LD Product/CollectionPage validate |
 
 ## Decisions
 
@@ -45,4 +46,32 @@ plan and is out of scope here.
   including all 54 per-device hardware pages; `dist/robots.txt` exposes
   the sitemap; sample device page emits `Product` JSON-LD with
   `manufacturer`, `category`, `image`.
+- 2026-05-07 — landed §4 (`drivers.json` + JSON schema +
+  `verify-suite-config` script) alongside plan 02. All 8 driver-kind
+  members in the manifest; 5 incoming drivers (cat-printer, labelife,
+  letratag, marklife, niimbot) carry `published: false` so the matrix
+  reads their `data/devices.json` without requiring an unreleased npm
+  package. `pull-driver-docs.mjs:REPOS`, `build-hardware-page.mjs:DRIVERS`,
+  and `.vitepress/config.ts` nav are derived from `drivers.json`; the
+  `editLink` PULLED list is inlined inside the pattern function (VitePress
+  serializes it for the client bundle so module-scope closures don't
+  survive). `build-matrix-page.mjs` writes `/hardware/index.md` and the
+  bundled `HardwareTable` index is retired from the build path. Hand-
+  authored `/hardware/wishlist` ships markdown-only with two CTAs and
+  TODO callouts deferring the contact-channel + tier-1 SKU list to the
+  maintainer. Build clean, sitemap 281 URLs.
+
+  Carry-over decisions:
+  - **`@thermal-label/contracts` is linked via npm `overrides` →
+    `file:../contracts`** so the docs site can import contracts types
+    directly. Equivalent to the plan's `pnpm.overrides → link:../contracts`.
+    **Pre-deploy gate:** publish contracts and swap the override for a
+    real version pin, otherwise CI on the docs repo and any contributor
+    checkout breaks. Same constraint as every driver carrying this
+    override.
+  - **`PROTOCOL_DOC_URLS`** still lives in `build-hardware-page.mjs` —
+    parent plan §5 (self-describing protocol docs URLs) is independent
+    work and out of scope for the matrix PR.
+  - **README banners (plan 02 §4)** are deferred — 8 small driver-repo
+    PRs, separate work from the docs-site PR.
 
