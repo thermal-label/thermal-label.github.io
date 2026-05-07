@@ -12,14 +12,12 @@ interface SuiteMember {
 }
 
 const MEMBERS = driversManifest.members as SuiteMember[];
-// Every member that gets pulled into docs/<name>/ — the `editLink`
-// pattern needs the full set so it routes edits back to the upstream
-// repo instead of into thermal-label.github.io itself.
-const PULLED_NAMES = MEMBERS.map(m => m.name);
-// Nav order mirrors the canonical reading order: shared types →
-// transport → drivers (driver order from drivers.json) → cli.
+// Nav order mirrors drivers.json order: shared/protocol-core/tool first
+// in their declared order, drivers in their declared order. That keeps
+// the canonical browse path (contracts → transport → drivers → cli)
+// without re-encoding it here.
 const NAV_PACKAGES = MEMBERS.map(m => ({
-  text: m.kind === 'driver' ? m.name : m.name,
+  text: m.name,
   link: `/${m.name}/`,
 }));
 
@@ -220,13 +218,22 @@ export default defineConfig({
     // "Edit device data" link straight to `data/devices/<KEY>.json5`,
     // so they never reach this function.
     editLink: {
+      // VitePress serializes this function for the client bundle so it
+      // can't close over module-scope state. The PULLED list has to be
+      // inlined inside the function body. This is the one place where
+      // adding a driver still requires touching this file — kept
+      // explicit until VitePress grows a serializer-friendly hook.
       pattern: ({ filePath }) => {
         const ORG = 'thermal-label';
         const SITE_REPO = 'thermal-label.github.io';
-        const PULLED = PULLED_NAMES;
+        const PULLED = [
+          'contracts', 'transport', 'cli',
+          'brother-ql', 'cat-printer', 'labelife', 'labelmanager',
+          'labelwriter', 'letratag', 'marklife', 'niimbot',
+        ];
 
         if (filePath === 'hardware/index.md') {
-          return `https://github.com/${ORG}/${SITE_REPO}/edit/main/scripts/build-hardware-page.mjs`;
+          return `https://github.com/${ORG}/${SITE_REPO}/edit/main/scripts/build-matrix-page.mjs`;
         }
 
         const generatedLanding = filePath.match(/^([^/]+)\/(?:index\.md|api\/index\.md)$/);

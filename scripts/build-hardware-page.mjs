@@ -1211,8 +1211,8 @@ async function main() {
   writeFileSync(join(HW_ROOT, '_data.json'), JSON.stringify(data, null, 2) + '\n');
   log(`wrote _data.json (${counts.total} devices total)`);
 
-  writeFileSync(join(HW_ROOT, 'index.md'), renderIndexPage(data));
-  log('wrote index.md');
+  // hardware/index.md is owned by scripts/build-matrix-page.mjs — the
+  // compatibility matrix replaces the bundled HardwareTable index.
 }
 
 await main();
