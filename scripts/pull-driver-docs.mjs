@@ -15,15 +15,19 @@
 // with a clear message. The build cannot ship with broken slices.
 
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
+import { cpSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadDrivers } from './lib/load-drivers.mjs';
+import { loadDrivers, driverMembers } from './lib/load-drivers.mjs';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(SCRIPT_DIR, '..');
 const DOCS_ROOT = join(SITE_ROOT, 'docs');
 const STAGING_ROOT = join(SITE_ROOT, '.staging');
+// Aggregated per-driver `data/devices.json` files land here. Read by
+// scripts/build-matrix-page.mjs; never served directly by VitePress.
+const AGG_ROOT = join(SITE_ROOT, '.aggregate');
+const AGG_DEVICES_DIR = join(AGG_ROOT, 'devices');
 
 // Source: drivers.json (single source of truth for the suite). Every
 // member's docs/ tree gets pulled into docs/<name>/, except driver-kind
@@ -173,13 +177,63 @@ function pullOne(entry) {
   }
 }
 
+// Per-driver `packages/core/data/devices.json` is the rich projection
+// emitted by each driver's codegen — `verificationGrid`, `supportStatus`,
+// and friends. The compatibility matrix reads these files; missing one
+// is a hard fail, in line with the "transport assumed-correct" axiom
+// (broken upstream is a release bug, not a runtime nuance).
+function pullDeviceData(member) {
+  const destPath = join(AGG_DEVICES_DIR, `${member.name}.json`);
+  const override = process.env[envKey(member.name)];
+
+  let sourcePath;
+  let cleanup;
+
+  if (override) {
+    if (isDir(override)) {
+      sourcePath = join(override, 'packages', 'core', 'data', 'devices.json');
+    } else {
+      const stage = shallowClone(member.name, override);
+      sourcePath = join(stage, 'packages', 'core', 'data', 'devices.json');
+      cleanup = () => rmSync(stage, { recursive: true, force: true });
+    }
+  } else {
+    const sibling = resolve(SITE_ROOT, '..', member.name);
+    if (isDir(sibling)) {
+      sourcePath = join(sibling, 'packages', 'core', 'data', 'devices.json');
+    } else {
+      const stage = shallowClone(member.name, member.ref);
+      sourcePath = join(stage, 'packages', 'core', 'data', 'devices.json');
+      cleanup = () => rmSync(stage, { recursive: true, force: true });
+    }
+  }
+
+  if (!existsSync(sourcePath)) {
+    cleanup?.();
+    fail(
+      `${member.name}: data/devices.json not found at ${sourcePath} — ` +
+      `every driver-kind member must publish a rich projection on its pinned ref. ` +
+      `Run \`pnpm compile-data\` in the driver repo or fix drivers.json.`,
+    );
+  }
+
+  copyFileSync(sourcePath, destPath);
+  cleanup?.();
+  log(`${member.name}: data/devices.json → .aggregate/devices/${member.name}.json`);
+}
+
 function main() {
   rmSync(STAGING_ROOT, { recursive: true, force: true });
+  rmSync(AGG_DEVICES_DIR, { recursive: true, force: true });
+  mkdirSync(AGG_DEVICES_DIR, { recursive: true });
   for (const entry of REPOS) {
     pullOne(entry);
   }
+  for (const driver of driverMembers(loadDrivers())) {
+    pullDeviceData(driver);
+  }
   rmSync(STAGING_ROOT, { recursive: true, force: true });
-  log(`pulled ${REPOS.length} repos into docs/`);
+  log(`pulled ${REPOS.length} repos into docs/, ${driverMembers(loadDrivers()).length} driver data sets into .aggregate/`);
 }
 
 main();

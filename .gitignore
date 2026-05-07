@@ -2,6 +2,7 @@ node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
 .staging
+.aggregate
 .DS_Store
 .claude/
 
@@ -10,8 +11,13 @@ docs/.vitepress/cache
 docs/contracts/
 docs/transport/
 docs/brother-ql/
+docs/cat-printer/
+docs/labelife/
 docs/labelmanager/
 docs/labelwriter/
+docs/letratag/
+docs/marklife/
+docs/niimbot/
 docs/cli/
 
 # `docs/public/` itself is build-relocated content (pull-driver-docs.mjs
