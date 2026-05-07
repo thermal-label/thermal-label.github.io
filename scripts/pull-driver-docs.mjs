@@ -18,25 +18,29 @@ import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDrivers } from './lib/load-drivers.mjs';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(SCRIPT_DIR, '..');
 const DOCS_ROOT = join(SITE_ROOT, 'docs');
 const STAGING_ROOT = join(SITE_ROOT, '.staging');
 
-/**
- * Each entry describes one source repo whose docs/ folder gets pulled in
- * under docs/<dest>/. `requiredFiles` are checked after the copy; missing
- * ones fail the build.
- */
-const REPOS = [
-  { repo: 'contracts',    dest: 'contracts',    ref: 'main', requiredFiles: ['index.md'] },
-  { repo: 'transport',    dest: 'transport',    ref: 'main', requiredFiles: ['index.md'] },
-  { repo: 'brother-ql',   dest: 'brother-ql',   ref: 'main', requiredFiles: ['index.md', 'getting-started.md'] },
-  { repo: 'labelmanager', dest: 'labelmanager', ref: 'main', requiredFiles: ['index.md', 'getting-started.md'] },
-  { repo: 'labelwriter',  dest: 'labelwriter',  ref: 'main', requiredFiles: ['index.md', 'getting-started.md'] },
-  { repo: 'cli',          dest: 'cli',          ref: 'main', requiredFiles: ['index.md'] },
-];
+// Source: drivers.json (single source of truth for the suite). Every
+// member's docs/ tree gets pulled into docs/<name>/, except driver-kind
+// members marked `published: false` — those are incoming drivers with
+// no shipped npm package yet. The matrix builder still consumes their
+// data/devices.json (see scripts/build-matrix-page.mjs); the docs
+// chrome (per-driver landing, sidebar, getting-started) lights up only
+// once the driver lands its first publishable release.
+const REPOS = loadDrivers()
+  .filter(m => !(m.kind === 'driver' && m.published === false))
+  .map(m => ({
+    repo: m.name,
+    dest: m.name,
+    ref: m.ref,
+    kind: m.kind,
+    requiredFiles: m.requiredFiles ?? ['index.md'],
+  }));
 
 const GITHUB_ORG = 'thermal-label';
 

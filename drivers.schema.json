@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "thermal-label suite manifest",
+  "description": "Single source of truth for which repos make up the thermal-label suite. Consumed by scripts/pull-driver-docs.mjs, scripts/build-hardware-page.mjs, and .vitepress/config.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["members"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "members": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/member" }
+    }
+  },
+  "$defs": {
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "repo", "ref"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Local repo / dest directory name (matches docs/<name>/)."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["driver", "protocol-core", "shared", "tool"]
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[\\w.-]+/[\\w.-]+$",
+          "description": "GitHub <org>/<repo>."
+        },
+        "ref": {
+          "type": "string",
+          "description": "git ref to clone for the public build (sibling checkouts override locally)."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable family label. Required for kind=driver."
+        },
+        "manufacturer": {
+          "type": "string",
+          "description": "Vendor / OEM string for JSON-LD. Required for kind=driver."
+        },
+        "pkg": {
+          "type": "string",
+          "pattern": "^@thermal-label/[\\w-]+-core$",
+          "description": "npm package name of the driver's *-core package. Required for kind=driver."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Driver-only flag. Defaults to true. Set false to keep the driver in drivers.json (so the matrix sees its data/devices.json) without requiring its npm package to be installed yet — used while a new driver is incoming and not yet released."
+        },
+        "requiredFiles": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "driver" } }, "required": ["kind"] },
+          "then": { "required": ["displayName", "manufacturer", "pkg"] }
+        }
+      ]
+    }
+  }
+}

@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "verify-suite-config": "node scripts/verify-suite-config.mjs",
     "docs:pull": "node scripts/pull-driver-docs.mjs",
     "docs:hardware": "node scripts/build-hardware-page.mjs",
-    "docs:prep": "npm run docs:pull && npm run docs:hardware",
+    "docs:prep": "npm run verify-suite-config && npm run docs:pull && npm run docs:hardware",
     "docs:dev": "npm run docs:prep && vitepress dev docs",
     "docs:build": "npm run docs:prep && vitepress build docs",
     "docs:preview": "vitepress preview docs"

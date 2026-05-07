@@ -1,4 +1,27 @@
 import { defineConfig } from 'vitepress';
+import driversManifest from '../../drivers.json' with { type: 'json' };
+
+interface SuiteMember {
+  name: string;
+  kind: 'driver' | 'protocol-core' | 'shared' | 'tool';
+  repo: string;
+  ref: string;
+  displayName?: string;
+  manufacturer?: string;
+  pkg?: string;
+}
+
+const MEMBERS = driversManifest.members as SuiteMember[];
+// Every member that gets pulled into docs/<name>/ — the `editLink`
+// pattern needs the full set so it routes edits back to the upstream
+// repo instead of into thermal-label.github.io itself.
+const PULLED_NAMES = MEMBERS.map(m => m.name);
+// Nav order mirrors the canonical reading order: shared types →
+// transport → drivers (driver order from drivers.json) → cli.
+const NAV_PACKAGES = MEMBERS.map(m => ({
+  text: m.kind === 'driver' ? m.name : m.name,
+  link: `/${m.name}/`,
+}));
 
 export default defineConfig({
   title: 'thermal-label',
@@ -36,14 +59,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/introduction' },
       {
         text: 'Packages',
-        items: [
-          { text: 'contracts', link: '/contracts/' },
-          { text: 'transport', link: '/transport/' },
-          { text: 'brother-ql', link: '/brother-ql/' },
-          { text: 'labelmanager', link: '/labelmanager/' },
-          { text: 'labelwriter', link: '/labelwriter/' },
-          { text: 'cli', link: '/cli/' },
-        ],
+        items: NAV_PACKAGES,
       },
       { text: 'Hardware', link: '/hardware/' },
       { text: 'Demo', link: '/demo/' },
@@ -207,7 +223,7 @@ export default defineConfig({
       pattern: ({ filePath }) => {
         const ORG = 'thermal-label';
         const SITE_REPO = 'thermal-label.github.io';
-        const PULLED = ['contracts', 'transport', 'brother-ql', 'labelmanager', 'labelwriter', 'cli'];
+        const PULLED = PULLED_NAMES;
 
         if (filePath === 'hardware/index.md') {
           return `https://github.com/${ORG}/${SITE_REPO}/edit/main/scripts/build-hardware-page.mjs`;

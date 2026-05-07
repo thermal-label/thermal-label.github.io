@@ -1,0 +1,111 @@
+{
+  "$schema": "./drivers.schema.json",
+  "members": [
+    {
+      "name": "contracts",
+      "kind": "shared",
+      "repo": "thermal-label/contracts",
+      "ref": "main",
+      "requiredFiles": ["index.md"]
+    },
+    {
+      "name": "transport",
+      "kind": "shared",
+      "repo": "thermal-label/transport",
+      "ref": "main",
+      "requiredFiles": ["index.md"]
+    },
+    {
+      "name": "cli",
+      "kind": "tool",
+      "repo": "thermal-label/cli",
+      "ref": "main",
+      "requiredFiles": ["index.md"]
+    },
+    {
+      "name": "brother-ql",
+      "kind": "driver",
+      "repo": "thermal-label/brother-ql",
+      "ref": "main",
+      "displayName": "Brother QL",
+      "manufacturer": "Brother",
+      "pkg": "@thermal-label/brother-ql-core",
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "cat-printer",
+      "kind": "driver",
+      "repo": "thermal-label/cat-printer",
+      "ref": "main",
+      "displayName": "Cat printer",
+      "manufacturer": "Various OEMs",
+      "pkg": "@thermal-label/cat-printer-core",
+      "published": false,
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "labelife",
+      "kind": "driver",
+      "repo": "thermal-label/labelife",
+      "ref": "main",
+      "displayName": "labelife (Aimo / Quyin)",
+      "manufacturer": "Various OEMs",
+      "pkg": "@thermal-label/labelife-core",
+      "published": false,
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "labelmanager",
+      "kind": "driver",
+      "repo": "thermal-label/labelmanager",
+      "ref": "main",
+      "displayName": "DYMO LabelManager",
+      "manufacturer": "DYMO",
+      "pkg": "@thermal-label/labelmanager-core",
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "labelwriter",
+      "kind": "driver",
+      "repo": "thermal-label/labelwriter",
+      "ref": "main",
+      "displayName": "DYMO LabelWriter",
+      "manufacturer": "DYMO",
+      "pkg": "@thermal-label/labelwriter-core",
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "letratag",
+      "kind": "driver",
+      "repo": "thermal-label/letratag",
+      "ref": "main",
+      "displayName": "DYMO LetraTag",
+      "manufacturer": "DYMO",
+      "pkg": "@thermal-label/letratag-core",
+      "published": false,
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "marklife",
+      "kind": "driver",
+      "repo": "thermal-label/marklife",
+      "ref": "main",
+      "displayName": "Marklife",
+      "manufacturer": "Marklife",
+      "pkg": "@thermal-label/marklife-core",
+      "published": false,
+      "requiredFiles": ["index.md", "getting-started.md"]
+    },
+    {
+      "name": "niimbot",
+      "kind": "driver",
+      "repo": "thermal-label/niimbot",
+      "ref": "main",
+      "displayName": "NIIMBOT",
+      "manufacturer": "NIIMBOT",
+      "pkg": "@thermal-label/niimbot-core",
+      "published": false,
+      "requiredFiles": ["index.md", "getting-started.md"]
+    }
+  ]
+}

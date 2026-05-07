@@ -19,6 +19,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDrivers, publishedDriverMembers } from './lib/load-drivers.mjs';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(SCRIPT_DIR, '..');
@@ -27,14 +28,18 @@ const HW_ROOT = join(DOCS_ROOT, 'hardware');
 
 const SITE_HOSTNAME = 'https://thermal-label.github.io';
 
-// Per-driver manufacturer for JSON-LD `Product.manufacturer`. Coarse for
-// OEM-mixed drivers (none yet); refines when DeviceEntry gains an
-// optional `manufacturer` field. Migrates to `drivers.json` in plan §4.
-const DRIVERS = [
-  { name: 'brother-ql',   displayName: 'Brother QL',        pkg: '@thermal-label/brother-ql-core',   manufacturer: 'Brother' },
-  { name: 'labelmanager', displayName: 'DYMO LabelManager', pkg: '@thermal-label/labelmanager-core', manufacturer: 'DYMO' },
-  { name: 'labelwriter',  displayName: 'DYMO LabelWriter',  pkg: '@thermal-label/labelwriter-core',  manufacturer: 'DYMO' },
-];
+// Source: drivers.json kind=driver entries with `published !== false`.
+// This script imports each driver's -core package from node_modules to
+// build per-device pages, so it skips drivers whose npm package isn't
+// shipped yet. The compatibility-matrix builder (build-matrix-page.mjs)
+// reads pulled `data/devices.json` files directly and covers all
+// kind=driver entries, published or not.
+const DRIVERS = publishedDriverMembers(loadDrivers()).map(m => ({
+  name: m.name,
+  displayName: m.displayName,
+  pkg: m.pkg,
+  manufacturer: m.manufacturer,
+}));
 
 // Map every (family, engine.protocol) the registry surfaces to the
 // docs URL for its wire-protocol reference page. Keyed by
