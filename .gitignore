@@ -30,6 +30,9 @@ docs/public/*
 !docs/public/icons/**
 !docs/public/robots.txt
 
-# Generated at build time by scripts/build-hardware-page.mjs from
-# DEVICES + each driver's docs/hardware-status.yaml.
-docs/hardware/
+# Generated at build time by scripts/build-hardware-page.mjs +
+# scripts/build-matrix-page.mjs. The wishlist is hand-authored so it's
+# un-ignored explicitly. Note: the parent must be ignored as `*` rather
+# than as a directory to allow the negation to take effect on a child.
+docs/hardware/*
+!docs/hardware/wishlist.md

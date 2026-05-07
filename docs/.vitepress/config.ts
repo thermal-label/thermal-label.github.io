@@ -59,7 +59,13 @@ export default defineConfig({
         text: 'Packages',
         items: NAV_PACKAGES,
       },
-      { text: 'Hardware', link: '/hardware/' },
+      {
+        text: 'Hardware',
+        items: [
+          { text: 'Compatibility matrix', link: '/hardware/' },
+          { text: 'Wishlist', link: '/hardware/wishlist' },
+        ],
+      },
       { text: 'Demo', link: '/demo/' },
       { text: 'Related orgs', link: '/related-orgs' },
     ],
