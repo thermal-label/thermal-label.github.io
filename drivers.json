@@ -16,6 +16,13 @@
       "requiredFiles": ["index.md"]
     },
     {
+      "name": "d1-core",
+      "kind": "protocol-core",
+      "repo": "thermal-label/d1-core",
+      "ref": "main",
+      "requiredFiles": ["index.md", "protocol.md", "topology.md"]
+    },
+    {
       "name": "cli",
       "kind": "tool",
       "repo": "thermal-label/cli",
@@ -82,7 +89,6 @@
       "displayName": "DYMO LetraTag",
       "manufacturer": "DYMO",
       "pkg": "@thermal-label/letratag-core",
-      "published": false,
       "requiredFiles": ["index.md", "getting-started.md"]
     },
     {

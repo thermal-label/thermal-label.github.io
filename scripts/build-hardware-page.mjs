@@ -43,9 +43,9 @@ const DRIVERS = publishedDriverMembers(loadDrivers()).map(m => ({
 
 // Map every (family, engine.protocol) the registry surfaces to the
 // docs URL for its wire-protocol reference page. Keyed by
-// `${family}:${protocol}` because `d1-tape` is implemented by two
-// different repos (labelmanager — canonical D1, and labelwriter — the
-// Duo's tape engine, with divergences in cut + status).
+// `${family}:${protocol}` so a driver-local protocol page can win over
+// a shared one when needed; today `d1-tape` is owned by the shared
+// `d1-core` repo and both labelmanager + labelwriter point at it.
 //
 // Set the value to `null` to mean "intentionally unlinked" (e.g. a
 // stub protocol slug that hasn't shipped its docs yet); the renderer
@@ -55,10 +55,11 @@ const DRIVERS = publishedDriverMembers(loadDrivers()).map(m => ({
 const PROTOCOL_DOC_URLS = {
   'brother-ql:ql-raster':   '/brother-ql/protocol/ql',
   'brother-ql:pt-raster':   '/brother-ql/protocol/pt',
-  'labelmanager:d1-tape':   '/labelmanager/protocol',
-  'labelwriter:lw-450':     '/labelwriter/protocol/lw-450',
-  'labelwriter:lw-550':     '/labelwriter/protocol/lw-550',
-  'labelwriter:d1-tape':    '/labelwriter/protocol/duo-tape',
+  'labelmanager:d1-tape':   '/d1-core/protocol',
+  'labelwriter:lw-raster':  '/labelwriter/protocol/lw-raster',
+  'labelwriter:lw5-raster': '/labelwriter/protocol/lw5-raster',
+  'labelwriter:d1-tape':    '/d1-core/protocol',
+  'letratag:letratag-bt':   '/letratag/protocol/letratag-bt',
 };
 
 const STATUS_ORDER = { verified: 0, partial: 1, broken: 2, untested: 3 };
@@ -91,6 +92,7 @@ const FAMILY_GLYPH = {
   'brother-ql':   '🟦',
   'labelmanager': '🟧',
   'labelwriter':  '🟥',
+  'letratag':     '🟨',
 };
 
 // One glyph per transport type. SPP and GATT share 📶 — both wireless,
@@ -114,9 +116,11 @@ const DEVICE_ICON = {
   'brother-ql:ql-raster':   { id: 'brother-ql',         label: 'DK rolls — die-cut + continuous, 12–62 mm wide' },
   'brother-ql:pt-raster':   { id: 'brother-pt',         label: 'TZe laminated tape (and HSe heat-shrink tube on PT-E models)' },
   'labelmanager:d1-tape':   { id: 'dymo-labelmanager',  label: 'D1 thermal-transfer tape, 6–24 mm wide' },
-  'labelwriter:lw-450':     { id: 'dymo-lw-450',        label: 'Pre-cut die-cut labels on a backing carrier' },
-  'labelwriter:lw-550':     { id: 'dymo-lw-550',        label: 'Pre-cut die-cut labels — NFC-locked DYMO-genuine media required' },
+  'labelwriter:lw-raster':  { id: 'dymo-lw-450',        label: 'Pre-cut die-cut labels on a backing carrier' },
+  'labelwriter:lw5-raster': { id: 'dymo-lw-550',        label: 'Pre-cut die-cut labels — NFC-locked DYMO-genuine media required' },
   'labelwriter:d1-tape':    { id: 'dymo-lw-duo',        label: 'Composite Duo — pre-cut die-cut labels + D1 tape on a second interface' },
+  // letratag:letratag-bt — pending docs/public/icons/device-dymo-letratag.svg;
+  // hardware rows fall back to "—" until the asset ships.
 };
 
 function deviceIconFor(family, engines) {
@@ -890,9 +894,7 @@ const DRIVER_OVERVIEWS = {
       { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
     ],
     demoLink: '/demo/labelmanager',
-    protocols: [
-      { href: '/labelmanager/protocol', title: 'D1 tape', desc: 'LabelManager command stream over USB and BLE.' },
-    ],
+    protocols: [],
   },
   labelwriter: {
     tagline:
@@ -907,15 +909,30 @@ const DRIVER_OVERVIEWS = {
     ],
     demoLink: '/demo/labelwriter',
     protocols: [
-      { href: '/labelwriter/protocol/lw-450',   title: 'LW 450 raster',  desc: 'Classic LW 4xx generation.' },
-      { href: '/labelwriter/protocol/lw-550',   title: 'LW 550 raster',  desc: 'Current LW 5xx generation, including NFC media validation.' },
-      { href: '/labelwriter/protocol/duo-tape', title: 'Duo tape',       desc: 'The second interface on the LW 450 Duo.' },
+      { href: '/labelwriter/protocol/lw-raster',  title: 'LW raster',  desc: 'Classic LW 3xx/4xx generation (incl. SE450, Twin Turbo, Wireless, Duo label side).' },
+      { href: '/labelwriter/protocol/lw5-raster', title: 'LW5 raster', desc: 'LW 5xx generation (550, 550 Turbo, 5XL), including NFC media validation.' },
     ],
     callout: {
       kind: 'warning',
       title: '550 series NFC label lock',
       body: 'The LabelWriter 550, 550 Turbo, and 5XL enforce NFC chip validation on every print job. **Non-certified labels are rejected at the hardware level** — there is no software workaround. See the [hardware list](./hardware) for the full model list.',
     },
+  },
+  letratag: {
+    tagline:
+      'TypeScript driver for the DYMO LetraTag BLE lineup. Bluetooth LE only; paper and plastic tapes.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, encoder, command stream. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'Node-side Bluetooth transport.' },
+      { slug: 'web',                   title: 'Web',                     desc: 'Web Bluetooth in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    demoLink: '/demo/letratag',
+    protocols: [
+      { href: '/letratag/protocol/letratag-bt', title: 'LetraTag BLE', desc: 'GATT framing, opcodes, and status replies.' },
+    ],
   },
 };
 
@@ -930,8 +947,15 @@ function renderDriverIndex(driver, pkgVersion, devices, apiPackageCount = 0) {
   const present = (slug) => existsSync(join(driverDir, slug + '.md')) || existsSync(join(driverDir, slug, 'index.md'));
   const pages = overview.pages.filter(p => present(p.slug));
   const docLines = pages.map(p => `- [${p.title}](./${p.slug}) — ${p.desc}`);
+  // demoLink is only honoured when the target page exists. New drivers
+  // (e.g. letratag during initial buildout) are added to drivers.json
+  // before their LiveDemo lands; emitting a dead link to /demo/<name>
+  // would fail the build.
   if (overview.demoLink) {
-    docLines.push(`- [Live demo](${overview.demoLink}) — pair a printer over WebUSB and print from this site.`);
+    const demoFile = join(DOCS_ROOT, overview.demoLink.replace(/^\//, '') + '.md');
+    if (existsSync(demoFile)) {
+      docLines.push(`- [Live demo](${overview.demoLink}) — pair a printer over WebUSB and print from this site.`);
+    }
   }
 
   const familyParam = encodeURIComponent(driver.displayName);
@@ -948,7 +972,7 @@ function renderDriverIndex(driver, pkgVersion, devices, apiPackageCount = 0) {
   );
   sections.push('## Packages');
   sections.push([
-    `- [\`${corePkg}-core\`](./core) — types, registries, encoders. Safe in Node and browsers.`,
+    present('core') ? `- [\`${corePkg}-core\`](./core) — types, registries, encoders. Safe in Node and browsers.` : null,
     present('node') ? `- [\`${corePkg}-node\`](./node) — Node-side transports and adapter.` : null,
     present('web')  ? `- [\`${corePkg}-web\`](./web) — browser-side transports and adapter.` : null,
   ].filter(Boolean).join('\n'));

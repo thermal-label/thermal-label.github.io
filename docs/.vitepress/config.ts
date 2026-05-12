@@ -93,6 +93,11 @@ export default defineConfig({
             { text: 'Overview', link: '/contracts/' },
           ],
         },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/contracts/api/README' }],
+        },
       ],
 
       '/transport/': [
@@ -101,6 +106,27 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/transport/' },
           ],
+        },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/transport/api/README' }],
+        },
+      ],
+
+      '/d1-core/': [
+        {
+          text: '@thermal-label/d1-core',
+          items: [
+            { text: 'Overview', link: '/d1-core/' },
+            { text: 'D1 tape protocol', link: '/d1-core/protocol' },
+            { text: 'Chassis and USB topology', link: '/d1-core/topology' },
+          ],
+        },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/d1-core/api/README' }],
         },
       ],
 
@@ -150,10 +176,6 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Wire protocols',
-          items: [{ text: 'D1 tape', link: '/labelmanager/protocol' }],
-        },
-        {
           text: 'API reference',
           collapsed: true,
           items: [{ text: 'TypeDoc index', link: '/labelmanager/api/' }],
@@ -178,9 +200,8 @@ export default defineConfig({
           text: 'Wire protocols',
           items: [
             { text: 'Overview', link: '/labelwriter/protocol/' },
-            { text: 'LW 450 raster', link: '/labelwriter/protocol/lw-450' },
-            { text: 'LW 550 raster', link: '/labelwriter/protocol/lw-550' },
-            { text: 'Duo tape', link: '/labelwriter/protocol/duo-tape' },
+            { text: 'LW raster', link: '/labelwriter/protocol/lw-raster' },
+            { text: 'LW5 raster', link: '/labelwriter/protocol/lw5-raster' },
           ],
         },
         {
@@ -233,7 +254,7 @@ export default defineConfig({
         const ORG = 'thermal-label';
         const SITE_REPO = 'thermal-label.github.io';
         const PULLED = [
-          'contracts', 'transport', 'cli',
+          'contracts', 'transport', 'd1-core', 'cli',
           'brother-ql', 'cat-printer', 'labelife', 'labelmanager',
           'labelwriter', 'letratag', 'marklife', 'niimbot',
         ];

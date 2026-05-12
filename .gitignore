@@ -10,6 +10,7 @@ docs/.vitepress/cache
 # Tracked content lives in those repos' docs/ folders.
 docs/contracts/
 docs/transport/
+docs/d1-core/
 docs/brother-ql/
 docs/cat-printer/
 docs/labelife/

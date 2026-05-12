@@ -310,8 +310,8 @@ function renderMatrixPage(matrixData, publishedSet) {
     '- **Multi-engine** devices (LabelWriter Duo, Twin Turbo) deliberately ' +
     'skip propagation — their cells are direct-only.',
     '- Sibling-protocol propagation operates on *exact* protocol strings, ' +
-    'so vendor families light up in narrow clusters (e.g. `lw-450` and ' +
-    '`lw-550` are distinct). Established generations fan out reasonably; ' +
+    'so vendor families light up in narrow clusters (e.g. `lw-raster` and ' +
+    '`lw5-raster` are distinct). Established generations fan out reasonably; ' +
     'one verified cell does **not** turn the whole vendor green.',
     '',
     '::: tip Verify your device',

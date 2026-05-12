@@ -70,10 +70,9 @@ If you are reverse-engineering, porting to another language, or auditing a paylo
 
 - [**Brother QL raster**](/brother-ql/protocol/ql) — DK-tape QL series, including two-colour QL-800 / QL-810W / QL-820NWB.
 - [**Brother PT raster**](/brother-ql/protocol/pt) — PT-P / PT-E P-touch lineup, 128-pin and 560-pin heads, TZe + HSe.
-- [**DYMO D1 tape**](/labelmanager/protocol) — LabelManager command stream over USB and BLE.
-- [**LabelWriter LW 450 raster**](/labelwriter/protocol/lw-450) — classic LW 4xx generation.
-- [**LabelWriter LW 550 raster**](/labelwriter/protocol/lw-550) — current LW 5xx generation, including NFC media gate.
-- [**LabelWriter Duo tape**](/labelwriter/protocol/duo-tape) — the second interface on the LW 450 Duo.
+- [**DYMO D1 tape**](/d1-core/protocol) — LabelManager command stream and the LW Duo's tape engine, shared in `@thermal-label/d1-core`.
+- [**LabelWriter raster**](/labelwriter/protocol/lw-raster) — classic LW 3xx/4xx generation (incl. SE450, Twin Turbo, Wireless, Duo label side).
+- [**LabelWriter 5xx raster**](/labelwriter/protocol/lw5-raster) — LW 5xx generation, including NFC media gate.
 
 ## 📦 Pick a driver
 

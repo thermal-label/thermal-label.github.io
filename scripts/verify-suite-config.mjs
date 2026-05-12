@@ -66,7 +66,13 @@ if (missing.length > 0) {
   );
 }
 
-const stray = declaredCorePkgs.filter(k => !publishedPkgs.has(k));
+// Protocol-core members (kind=protocol-core) expose a *-core npm name too
+// (e.g. @thermal-label/d1-core) and may appear in package.json deps as a
+// local override target. Allow them through the stray check.
+const protocolCorePkgs = new Set(
+  members.filter(m => m.kind === 'protocol-core').map(m => `@thermal-label/${m.name}`),
+);
+const stray = declaredCorePkgs.filter(k => !publishedPkgs.has(k) && !protocolCorePkgs.has(k));
 if (stray.length > 0) {
   fail(
     `package.json has @thermal-label/*-core deps with no published driver entry: ${stray.join(', ')}\n` +
