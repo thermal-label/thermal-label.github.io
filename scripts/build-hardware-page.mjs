@@ -53,13 +53,29 @@ const DRIVERS = publishedDriverMembers(loadDrivers()).map(m => ({
 // the build — that's the load-bearing part: a new engine.protocol
 // can't ship without a doc page or an explicit decision not to link.
 const PROTOCOL_DOC_URLS = {
-  'brother-ql:ql-raster':   '/brother-ql/protocol/ql',
-  'brother-ql:pt-raster':   '/brother-ql/protocol/pt',
-  'labelmanager:d1-tape':   '/d1-core/protocol',
-  'labelwriter:lw-raster':  '/labelwriter/protocol/lw-raster',
-  'labelwriter:lw5-raster': '/labelwriter/protocol/lw5-raster',
-  'labelwriter:d1-tape':    '/d1-core/protocol',
-  'letratag:letratag-bt':   '/letratag/protocol/letratag-bt',
+  'brother-ql:ql-raster':       '/brother-ql/protocol/ql',
+  'brother-ql:pt-raster':       '/brother-ql/protocol/pt',
+  'labelmanager:d1-tape':       '/d1-core/protocol',
+  'labelwriter:lw-raster':      '/labelwriter/protocol/lw-raster',
+  'labelwriter:lw5-raster':     '/labelwriter/protocol/lw5-raster',
+  'labelwriter:d1-tape':        '/d1-core/protocol',
+  'letratag:letratag-bt':       '/letratag/protocol/letratag-bt',
+  'cat-printer:cat-printer':    '/cat-printer/protocol/cat-printer',
+  'labelife:escpos-a':          '/labelife/protocol/escpos',
+  'labelife:escpos-p1':         '/labelife/protocol/escpos',
+  'labelife:escpos-y0':         '/labelife/protocol/escpos',
+  'labelife:tspl-c1':           '/labelife/protocol/tspl',
+  'labelife:tspl-l3':           '/labelife/protocol/tspl',
+  'labelife:tspl-m3':           '/labelife/protocol/tspl',
+  'marklife:marklife-escpos':   '/marklife/protocol/escpos',
+  'marklife:marklife-jbig':     '/marklife/protocol/jbig',
+  'marklife:marklife-tspl':     '/marklife/protocol/tspl',
+  'marklife:marklife-yxq':      '/marklife/protocol/yxq',
+  'niimbot:niimbot-b1':         '/niimbot/protocol/niimbot',
+  'niimbot:niimbot-b21-v1':     '/niimbot/protocol/niimbot',
+  'niimbot:niimbot-d110':       '/niimbot/protocol/niimbot',
+  'niimbot:niimbot-d110m-v4':   '/niimbot/protocol/niimbot',
+  'niimbot:niimbot-d11-v1':     '/niimbot/protocol/niimbot',
 };
 
 const STATUS_ORDER = { verified: 0, partial: 1, broken: 2, untested: 3 };
@@ -937,6 +953,79 @@ const DRIVER_OVERVIEWS = {
     harnessLink: null,
     protocols: [
       { href: '/letratag/protocol/letratag-bt', title: 'LetraTag BLE', desc: 'GATT framing, opcodes, and status replies.' },
+    ],
+  },
+  'cat-printer': {
+    tagline:
+      'TypeScript driver for the cat-printer family — Phomemo M02/M03/M04, GB01-03, GT01-03, MX-series, and OEM clones. BLE only; continuous direct-thermal sticker stock.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, encoder, command stream. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'Node-side Bluetooth transport.' },
+      { slug: 'web',                   title: 'Web',                     desc: 'Web Bluetooth in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'catprinter-hardware',   title: 'Catalog',                 desc: 'Per-chassis breakdown across the OEM clones.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    harnessLink: null,
+    protocols: [
+      { href: '/cat-printer/protocol/cat-printer', title: 'Cat-printer protocol', desc: 'BLE GATT framing and opcodes.' },
+    ],
+  },
+  labelife: {
+    tagline:
+      'TypeScript driver for the labelife (Aimo / Quyin) family — continuous thermal rolls and RFID-tagged cassettes, USB / Serial / BLE.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, encoder, command stream. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'USB and Serial transports for Node.' },
+      { slug: 'web',                   title: 'Web',                     desc: 'WebUSB, Web Serial, and Web Bluetooth in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'escpos-hardware',       title: 'ESC/POS catalog',         desc: 'Per-chassis breakdown across ESC/POS sub-engines.' },
+      { slug: 'tspl-hardware',         title: 'TSPL catalog',            desc: 'Per-chassis breakdown across TSPL sub-engines.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    harnessLink: null,
+    protocols: [
+      { href: '/labelife/protocol/escpos', title: 'ESC/POS',  desc: 'ESC/POS sub-engines (a / p1 / y0).' },
+      { href: '/labelife/protocol/tspl',   title: 'TSPL',     desc: 'TSPL sub-engines (c1 / l3 / m3).' },
+    ],
+  },
+  marklife: {
+    tagline:
+      'TypeScript driver for the Marklife family — continuous thermal sticker stock and gap / die-cut stock, BT-SPP via Web Serial.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, encoder, command stream. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'Node-side Bluetooth SPP transport.' },
+      { slug: 'web',                   title: 'Web',                     desc: 'Web Serial (BT-SPP) in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'marklife-hardware',     title: 'Catalog',                 desc: 'Per-chassis breakdown across the Marklife lineup.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    harnessLink: null,
+    protocols: [
+      { href: '/marklife/protocol/escpos', title: 'ESC/POS', desc: 'ESC/POS-style sub-engine.' },
+      { href: '/marklife/protocol/jbig',   title: 'JBIG',    desc: 'JBIG-compressed sub-engine.' },
+      { href: '/marklife/protocol/tspl',   title: 'TSPL',    desc: 'TSPL-style sub-engine.' },
+      { href: '/marklife/protocol/yxq',    title: 'YXQ',     desc: 'YXQ-style sub-engine.' },
+    ],
+  },
+  niimbot: {
+    tagline:
+      'TypeScript driver for the NIIMBOT D / B / H lineup — BLE label printers with RFID-keyed cassettes.',
+    pages: [
+      { slug: 'getting-started',       title: 'Getting started',         desc: 'Install the packages and run a first print.' },
+      { slug: 'core',                  title: 'Core',                    desc: 'Types, encoder, command stream. Browser-safe.' },
+      { slug: 'node',                  title: 'Node',                    desc: 'Node-side Bluetooth transport.' },
+      { slug: 'web',                   title: 'Web',                     desc: 'Web Bluetooth in Chrome / Edge.' },
+      { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
+      { slug: 'niimbot-hardware',      title: 'Catalog',                 desc: 'Per-chassis breakdown across the NIIMBOT lineup.' },
+      { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
+    ],
+    harnessLink: null,
+    protocols: [
+      { href: '/niimbot/protocol/niimbot', title: 'NIIMBOT', desc: 'Packet-framing protocol across the five sub-engines.' },
     ],
   },
 };
