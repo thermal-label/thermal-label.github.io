@@ -37,3 +37,6 @@ docs/public/*
 # than as a directory to allow the negation to take effect on a child.
 docs/hardware/*
 !docs/hardware/wishlist.md
+
+# Generated at build time by scripts/build-connecting-page.mjs.
+docs/connecting.md

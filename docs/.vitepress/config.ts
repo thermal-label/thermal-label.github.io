@@ -76,7 +76,7 @@ export default defineConfig({
           items: [
             { text: 'Introduction', link: '/guide/introduction' },
             { text: 'Architecture', link: '/guide/architecture' },
-            { text: 'Connecting your printer', link: '/guide/connecting-your-printer' },
+            { text: 'Connecting your printer', link: '/connecting' },
             { text: 'Drivers', link: '/guide/drivers' },
             { text: 'CLI', link: '/guide/cli' },
             { text: 'Integrating', link: '/guide/integrating' },
