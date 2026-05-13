@@ -212,6 +212,33 @@ export default defineConfig({
         },
       ],
 
+      '/letratag/': [
+        {
+          text: '@thermal-label/letratag-*',
+          items: [
+            { text: 'Overview', link: '/letratag/' },
+            { text: 'Getting started', link: '/letratag/getting-started' },
+            { text: 'Core', link: '/letratag/core' },
+            { text: 'Web (Bluetooth)', link: '/letratag/web' },
+            { text: 'Hardware', link: '/letratag/hardware' },
+            { text: 'Media', link: '/letratag/media' },
+            { text: 'Verification checklist', link: '/letratag/verification-checklist' },
+            { text: 'Hardware harness', link: 'https://thermal-label.github.io/harness/letratag/' },
+          ],
+        },
+        {
+          text: 'Wire protocols',
+          items: [
+            { text: 'LetraTag BT', link: '/letratag/protocol/letratag-bt' },
+          ],
+        },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/letratag/api/' }],
+        },
+      ],
+
       '/cli/': [
         {
           text: 'thermal-label-cli',
