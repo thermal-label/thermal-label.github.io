@@ -876,7 +876,10 @@ const DRIVER_OVERVIEWS = {
       { slug: 'media',                 title: 'Media',                   desc: 'DK / TZe / HSe roll catalog.' },
       { slug: 'troubleshooting',       title: 'Troubleshooting',         desc: 'Common failure modes and how to read status frames.' },
     ],
-    demoLink: '/demo/brother-ql',
+    // brother-ql browser harness is still in development; once
+    // apps/harness-brother-ql/ ships a Release artifact and the docs CI
+    // pulls it under /harness/brother-ql/, flip this to a harnessLink.
+    harnessLink: null,
     protocols: [
       { href: '/brother-ql/protocol/ql', title: 'QL raster', desc: 'DK-tape QL series, including two-colour QL-800 / QL-810W / QL-820NWB.' },
       { href: '/brother-ql/protocol/pt', title: 'PT raster', desc: 'PT-P / PT-E P-touch lineup, 128-pin and 560-pin heads, TZe + HSe.' },
@@ -893,7 +896,7 @@ const DRIVER_OVERVIEWS = {
       { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
       { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
     ],
-    demoLink: '/demo/labelmanager',
+    harnessLink: 'https://thermal-label.github.io/harness/labelmanager/',
     protocols: [],
   },
   labelwriter: {
@@ -907,7 +910,7 @@ const DRIVER_OVERVIEWS = {
       { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages, including the 550-series NFC media gate.' },
       { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
     ],
-    demoLink: '/demo/labelwriter',
+    harnessLink: 'https://thermal-label.github.io/harness/labelwriter/',
     protocols: [
       { href: '/labelwriter/protocol/lw-raster',  title: 'LW raster',  desc: 'Classic LW 3xx/4xx generation (incl. SE450, Twin Turbo, Wireless, Duo label side).' },
       { href: '/labelwriter/protocol/lw5-raster', title: 'LW5 raster', desc: 'LW 5xx generation (550, 550 Turbo, 5XL), including NFC media validation.' },
@@ -929,7 +932,9 @@ const DRIVER_OVERVIEWS = {
       { slug: 'hardware',              title: 'Hardware',                desc: 'Per-device pages with verification reports.' },
       { slug: 'verification-checklist',title: 'Verification checklist',  desc: 'What to run before filing a verification report.' },
     ],
-    demoLink: '/demo/letratag',
+    // letratag harness is the prototype in apps/harness-letratag/; not
+    // yet pulled into the docs site under /harness/letratag/.
+    harnessLink: null,
     protocols: [
       { href: '/letratag/protocol/letratag-bt', title: 'LetraTag BLE', desc: 'GATT framing, opcodes, and status replies.' },
     ],
@@ -947,15 +952,14 @@ function renderDriverIndex(driver, pkgVersion, devices, apiPackageCount = 0) {
   const present = (slug) => existsSync(join(driverDir, slug + '.md')) || existsSync(join(driverDir, slug, 'index.md'));
   const pages = overview.pages.filter(p => present(p.slug));
   const docLines = pages.map(p => `- [${p.title}](./${p.slug}) — ${p.desc}`);
-  // demoLink is only honoured when the target page exists. New drivers
-  // (e.g. letratag during initial buildout) are added to drivers.json
-  // before their LiveDemo lands; emitting a dead link to /demo/<name>
-  // would fail the build.
-  if (overview.demoLink) {
-    const demoFile = join(DOCS_ROOT, overview.demoLink.replace(/^\//, '') + '.md');
-    if (existsSync(demoFile)) {
-      docLines.push(`- [Live demo](${overview.demoLink}) — pair a printer over WebUSB and print from this site.`);
-    }
+  // harnessLink points at the browser harness on
+  // thermal-label.github.io/harness/<driver>/ (built from the harness
+  // monorepo and pulled into the docs site at build time, per plan 06).
+  // Drivers without a shipped harness bundle leave it null; new drivers
+  // wait until their app is built + the docs pull is wired before
+  // flipping this on, so the rendered link is never dead.
+  if (overview.harnessLink) {
+    docLines.push(`- [Hardware harness](${overview.harnessLink}) — pair a printer over WebUSB, run a diagnostic print, and file a verification report.`);
   }
 
   const familyParam = encodeURIComponent(driver.displayName);
@@ -1004,7 +1008,7 @@ function renderDriverIndex(driver, pkgVersion, devices, apiPackageCount = 0) {
   sections.push('## Source');
   sections.push(`[${ghHref.replace('https://', '')}](${ghHref}) · [npm: \`${driver.pkg}\`](${npmHref})`);
 
-  const description = `${driver.displayName} TypeScript driver — Node, browser, hardware, wire protocol, and live demo.`;
+  const description = `${driver.displayName} TypeScript driver — Node, browser, hardware, wire protocol, and a browser-based hardware harness.`;
   // Pick a representative device icon for the og:image. First device with a
   // resolvable icon wins — driver-level hero artwork doesn't exist yet.
   let firstIcon = null;

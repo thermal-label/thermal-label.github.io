@@ -66,7 +66,6 @@ export default defineConfig({
           { text: 'Wishlist', link: '/hardware/wishlist' },
         ],
       },
-      { text: 'Demo', link: '/demo/' },
       { text: 'Related orgs', link: '/related-orgs' },
     ],
 
@@ -143,7 +142,6 @@ export default defineConfig({
             { text: 'Verification checklist', link: '/brother-ql/verification-checklist' },
             { text: 'Media', link: '/brother-ql/media' },
             { text: 'Troubleshooting', link: '/brother-ql/troubleshooting' },
-            { text: 'Live demo', link: '/demo/brother-ql' },
           ],
         },
         {
@@ -172,7 +170,7 @@ export default defineConfig({
             { text: 'Web', link: '/labelmanager/web' },
             { text: 'Hardware', link: '/labelmanager/hardware' },
             { text: 'Verification checklist', link: '/labelmanager/verification-checklist' },
-            { text: 'Live demo', link: '/demo/labelmanager' },
+            { text: 'Hardware harness', link: 'https://thermal-label.github.io/harness/labelmanager/' },
           ],
         },
         {
@@ -193,7 +191,7 @@ export default defineConfig({
             { text: 'Web (WebUSB)', link: '/labelwriter/web' },
             { text: 'Hardware', link: '/labelwriter/hardware' },
             { text: 'Verification checklist', link: '/labelwriter/verification-checklist' },
-            { text: 'Live demo', link: '/demo/labelwriter' },
+            { text: 'Hardware harness', link: 'https://thermal-label.github.io/harness/labelwriter/' },
           ],
         },
         {
@@ -220,17 +218,6 @@ export default defineConfig({
         },
       ],
 
-      '/demo/': [
-        {
-          text: 'Live demos',
-          items: [
-            { text: 'Pick a printer family', link: '/demo/' },
-            { text: 'Brother QL', link: '/demo/brother-ql' },
-            { text: 'DYMO LabelManager', link: '/demo/labelmanager' },
-            { text: 'DYMO LabelWriter', link: '/demo/labelwriter' },
-          ],
-        },
-      ],
     },
 
     socialLinks: [{ icon: 'github', link: 'https://github.com/thermal-label' }],

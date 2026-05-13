@@ -13,8 +13,8 @@ hero:
       text: Introduction
       link: /guide/introduction
     - theme: alt
-      text: Live demos
-      link: /demo/
+      text: Hardware harness
+      link: https://thermal-label.github.io/harness/labelmanager/
     - theme: alt
       text: GitHub org
       link: https://github.com/thermal-label
@@ -36,10 +36,10 @@ features:
     link: /guide/architecture
     linkText: Architecture overview
   - icon: 🧪
-    title: Live in-browser demos
-    details: Pair a printer over WebUSB or Web Bluetooth from the docs site itself. Render the bitmap preview without hardware; only "send" needs a real device.
-    link: /demo/
-    linkText: Try the demos
+    title: Browser hardware harness
+    details: Pair a printer over WebUSB, run a one-page diagnostic print, and file a verification report against the registry — straight from the browser. Shipped for LabelManager and LabelWriter; brother-ql harness is bench-only for now.
+    link: https://thermal-label.github.io/harness/labelmanager/
+    linkText: Open the harness
   - icon: ⌨️
     title: thermal-label-cli
     details: List printers, read status frames, push quick text or image jobs from the shell. Intentionally small — diagnostics and scripts, not a layout engine.
