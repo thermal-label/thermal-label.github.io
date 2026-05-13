@@ -364,6 +364,11 @@ function renderPage(member, mediaResult, devices) {
 
   sections.push(`**${entries.length}** ${entries.length === 1 ? 'entry' : 'entries'} in the registry.`);
 
+  const placement = member.mediaFragmentPlacement ?? 'after';
+  if (fragment && placement === 'before') {
+    sections.push(demoteHeadings(fragment).trim());
+  }
+
   sections.push('## Catalogue');
   sections.push(renderMainTable(entries, cols));
 
@@ -375,13 +380,12 @@ function renderPage(member, mediaResult, devices) {
     sections.push(grouped);
   }
 
-  // Slot the hand-authored fragment after the generic tables. For
-  // brother-ql today the fragment carries the SW pin map + status-byte
-  // observations, which are reference material rather than catalogue
-  // navigation — readers come to the page for "what rolls does this
-  // driver know about", then drop into the pin-map for low-level work.
-  // Placing the fragment after the generic tables matches that flow.
-  if (fragment) {
+  // Default placement is after the generic tables — reference fragments
+  // (e.g. brother-ql's SW pin map) read as low-level follow-up to the
+  // "what rolls does this driver know about" overview. Warning/framing
+  // fragments (d1-core's Rhino compatibility caveat) set placement to
+  // 'before' so readers see them before scanning the table.
+  if (fragment && placement === 'after') {
     sections.push(demoteHeadings(fragment).trim());
   }
 

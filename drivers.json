@@ -21,7 +21,9 @@
       "repo": "thermal-label/d1-core",
       "ref": "main",
       "requiredFiles": ["index.md", "protocol.md", "topology.md"],
-      "mediaDataFile": "data/media.json"
+      "mediaDataFile": "data/media.json",
+      "mediaFragment": "docs/media-fragment.md",
+      "mediaFragmentPlacement": "before"
     },
     {
       "name": "cli",
