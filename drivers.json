@@ -52,7 +52,6 @@
       "displayName": "Cat printer",
       "manufacturer": "Various OEMs",
       "pkg": "@thermal-label/cat-printer-core",
-      "published": false,
       "requiredFiles": ["index.md", "getting-started.md"],
       "mediaDataFile": "packages/core/data/media.json"
     },
@@ -64,7 +63,6 @@
       "displayName": "labelife (Aimo / Quyin)",
       "manufacturer": "Various OEMs",
       "pkg": "@thermal-label/labelife-core",
-      "published": false,
       "requiredFiles": ["index.md", "getting-started.md"],
       "mediaDataFile": "packages/core/data/media.json"
     },
@@ -109,7 +107,6 @@
       "displayName": "Marklife",
       "manufacturer": "Marklife",
       "pkg": "@thermal-label/marklife-core",
-      "published": false,
       "requiredFiles": ["index.md", "getting-started.md"],
       "mediaDataFile": "packages/core/data/media.json"
     },
@@ -121,7 +118,6 @@
       "displayName": "NIIMBOT",
       "manufacturer": "NIIMBOT",
       "pkg": "@thermal-label/niimbot-core",
-      "published": false,
       "requiredFiles": ["index.md", "getting-started.md"],
       "mediaDataFile": "packages/core/data/media.json"
     }
