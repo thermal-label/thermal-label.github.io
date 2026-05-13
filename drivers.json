@@ -20,7 +20,8 @@
       "kind": "protocol-core",
       "repo": "thermal-label/d1-core",
       "ref": "main",
-      "requiredFiles": ["index.md", "protocol.md", "topology.md"]
+      "requiredFiles": ["index.md", "protocol.md", "topology.md"],
+      "mediaDataFile": "data/media.json"
     },
     {
       "name": "cli",
@@ -37,7 +38,9 @@
       "displayName": "Brother QL",
       "manufacturer": "Brother",
       "pkg": "@thermal-label/brother-ql-core",
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json",
+      "mediaFragment": "docs/media-pinmap-fragment.md"
     },
     {
       "name": "cat-printer",
@@ -48,7 +51,8 @@
       "manufacturer": "Various OEMs",
       "pkg": "@thermal-label/cat-printer-core",
       "published": false,
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json"
     },
     {
       "name": "labelife",
@@ -59,7 +63,8 @@
       "manufacturer": "Various OEMs",
       "pkg": "@thermal-label/labelife-core",
       "published": false,
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json"
     },
     {
       "name": "labelmanager",
@@ -79,7 +84,8 @@
       "displayName": "DYMO LabelWriter",
       "manufacturer": "DYMO",
       "pkg": "@thermal-label/labelwriter-core",
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json"
     },
     {
       "name": "letratag",
@@ -89,7 +95,8 @@
       "displayName": "DYMO LetraTag",
       "manufacturer": "DYMO",
       "pkg": "@thermal-label/letratag-core",
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json"
     },
     {
       "name": "marklife",
@@ -100,7 +107,8 @@
       "manufacturer": "Marklife",
       "pkg": "@thermal-label/marklife-core",
       "published": false,
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json"
     },
     {
       "name": "niimbot",
@@ -111,7 +119,8 @@
       "manufacturer": "NIIMBOT",
       "pkg": "@thermal-label/niimbot-core",
       "published": false,
-      "requiredFiles": ["index.md", "getting-started.md"]
+      "requiredFiles": ["index.md", "getting-started.md"],
+      "mediaDataFile": "packages/core/data/media.json"
     }
   ]
 }

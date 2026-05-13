@@ -28,6 +28,12 @@ const STAGING_ROOT = join(SITE_ROOT, '.staging');
 // scripts/build-matrix-page.mjs; never served directly by VitePress.
 const AGG_ROOT = join(SITE_ROOT, '.aggregate');
 const AGG_DEVICES_DIR = join(AGG_ROOT, 'devices');
+// Per-driver media catalogue (compiled JSON form of `media.json5`). Read
+// by scripts/build-media-pages.mjs; never served directly by VitePress.
+// Members that don't ship a media catalogue (e.g. labelmanager, which
+// consumes d1-core's shared D1 catalogue) simply omit `mediaDataFile`
+// in drivers.json and are skipped here.
+const AGG_MEDIA_DIR = join(AGG_ROOT, 'media');
 
 // Source: drivers.json (single source of truth for the suite). Every
 // member's docs/ tree gets pulled into docs/<name>/, except driver-kind
@@ -222,18 +228,76 @@ function pullDeviceData(member) {
   log(`${member.name}: data/devices.json → .aggregate/devices/${member.name}.json`);
 }
 
+// Pull each member's compiled media catalogue (paired with its
+// `media.json5` source) into `.aggregate/media/<name>.json`. The repo-
+// relative path is declared in drivers.json as `mediaDataFile`; most
+// drivers carry `packages/core/data/media.json`, but d1-core lives at
+// `data/media.json` (no packages/ layer — it's a single-package repo).
+// Members without a `mediaDataFile` are skipped — labelmanager doesn't
+// have its own catalogue and consumes d1-core's shared D1 entries at
+// runtime, so its docs/labelmanager/media.md is intentionally not
+// generated here.
+function pullMediaData(member) {
+  if (!member.mediaDataFile) return false;
+  const destPath = join(AGG_MEDIA_DIR, `${member.name}.json`);
+  const override = process.env[envKey(member.name)];
+
+  let sourcePath;
+  let cleanup;
+
+  if (override) {
+    if (isDir(override)) {
+      sourcePath = join(override, member.mediaDataFile);
+    } else {
+      const stage = shallowClone(member.name, override);
+      sourcePath = join(stage, member.mediaDataFile);
+      cleanup = () => rmSync(stage, { recursive: true, force: true });
+    }
+  } else {
+    const sibling = resolve(SITE_ROOT, '..', member.name);
+    if (isDir(sibling)) {
+      sourcePath = join(sibling, member.mediaDataFile);
+    } else {
+      const stage = shallowClone(member.name, member.ref);
+      sourcePath = join(stage, member.mediaDataFile);
+      cleanup = () => rmSync(stage, { recursive: true, force: true });
+    }
+  }
+
+  if (!existsSync(sourcePath)) {
+    cleanup?.();
+    fail(
+      `${member.name}: mediaDataFile not found at ${sourcePath} — ` +
+      `drivers.json declares mediaDataFile="${member.mediaDataFile}" but the file is missing. ` +
+      `Run \`pnpm compile-data\` in the source repo or drop the declaration.`,
+    );
+  }
+
+  copyFileSync(sourcePath, destPath);
+  cleanup?.();
+  log(`${member.name}: ${member.mediaDataFile} → .aggregate/media/${member.name}.json`);
+  return true;
+}
+
 function main() {
   rmSync(STAGING_ROOT, { recursive: true, force: true });
   rmSync(AGG_DEVICES_DIR, { recursive: true, force: true });
+  rmSync(AGG_MEDIA_DIR, { recursive: true, force: true });
   mkdirSync(AGG_DEVICES_DIR, { recursive: true });
+  mkdirSync(AGG_MEDIA_DIR, { recursive: true });
   for (const entry of REPOS) {
     pullOne(entry);
   }
-  for (const driver of driverMembers(loadDrivers())) {
+  const members = loadDrivers();
+  for (const driver of driverMembers(members)) {
     pullDeviceData(driver);
   }
+  let mediaCount = 0;
+  for (const m of members) {
+    if (pullMediaData(m)) mediaCount++;
+  }
   rmSync(STAGING_ROOT, { recursive: true, force: true });
-  log(`pulled ${REPOS.length} repos into docs/, ${driverMembers(loadDrivers()).length} driver data sets into .aggregate/`);
+  log(`pulled ${REPOS.length} repos into docs/, ${driverMembers(members).length} driver data sets + ${mediaCount} media catalogues into .aggregate/`);
 }
 
 main();

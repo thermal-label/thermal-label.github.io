@@ -55,6 +55,14 @@
         "requiredFiles": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "mediaDataFile": {
+          "type": "string",
+          "description": "Repo-relative path to a compiled media.json catalogue (paired with a media.json5 source). Pulled by scripts/pull-driver-docs.mjs into .aggregate/media/<name>.json and rendered by scripts/build-media-pages.mjs into docs/<name>/media.md. Most drivers use 'packages/core/data/media.json'; d1-core uses 'data/media.json'."
+        },
+        "mediaFragment": {
+          "type": "string",
+          "description": "Optional repo-relative path to a hand-authored markdown fragment that build-media-pages.mjs slot-includes into the generated media page (e.g. brother-ql's spool-switch pin map). Pulled along with docs/ in the normal docs sync."
         }
       },
       "allOf": [
