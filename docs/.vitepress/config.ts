@@ -120,6 +120,7 @@ export default defineConfig({
             { text: 'Overview', link: '/d1-core/' },
             { text: 'D1 tape protocol', link: '/d1-core/protocol' },
             { text: 'Chassis and USB topology', link: '/d1-core/topology' },
+            { text: 'Media', link: '/d1-core/media' },
           ],
         },
         {
@@ -169,6 +170,7 @@ export default defineConfig({
             { text: 'Node', link: '/labelmanager/node' },
             { text: 'Web', link: '/labelmanager/web' },
             { text: 'Hardware', link: '/labelmanager/hardware' },
+            { text: 'Media', link: '/d1-core/media' },
             { text: 'Verification checklist', link: '/labelmanager/verification-checklist' },
             { text: 'Hardware harness', link: 'https://thermal-label.github.io/harness/labelmanager/' },
           ],
@@ -190,6 +192,7 @@ export default defineConfig({
             { text: 'Node', link: '/labelwriter/node' },
             { text: 'Web (WebUSB)', link: '/labelwriter/web' },
             { text: 'Hardware', link: '/labelwriter/hardware' },
+            { text: 'Media', link: '/labelwriter/media' },
             { text: 'Verification checklist', link: '/labelwriter/verification-checklist' },
             { text: 'Hardware harness', link: 'https://thermal-label.github.io/harness/labelwriter/' },
           ],
