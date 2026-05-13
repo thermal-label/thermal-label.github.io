@@ -68,6 +68,18 @@
           "type": "string",
           "enum": ["before", "after"],
           "description": "Where to slot the mediaFragment relative to the generated catalogue tables. 'after' (default) suits reference fragments readers consult after browsing; 'before' suits warnings or framing callouts that should be seen first."
+        },
+        "mediaFilter": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Filter the entries surfaced on the generated media page without changing the underlying catalogue. Useful when a driver's compiled media.json merges in shared catalogues that have their own page (e.g. labelwriter merges d1-core's tape entries at compile time; surface those on /d1-core/media instead).",
+          "properties": {
+            "excludeTypes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Drop entries whose `type` field matches any value in the list."
+            }
+          }
         }
       },
       "allOf": [

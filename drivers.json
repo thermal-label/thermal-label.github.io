@@ -87,7 +87,8 @@
       "manufacturer": "DYMO",
       "pkg": "@thermal-label/labelwriter-core",
       "requiredFiles": ["index.md", "getting-started.md"],
-      "mediaDataFile": "packages/core/data/media.json"
+      "mediaDataFile": "packages/core/data/media.json",
+      "mediaFilter": { "excludeTypes": ["tape"] }
     },
     {
       "name": "letratag",

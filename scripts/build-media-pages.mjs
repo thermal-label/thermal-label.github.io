@@ -339,8 +339,15 @@ function loadFragment(name, mediaFragment) {
   return readFileSync(fragPath, 'utf8');
 }
 
+function applyMediaFilter(entries, filter) {
+  if (!filter) return entries;
+  const excludeTypes = new Set(filter.excludeTypes ?? []);
+  if (excludeTypes.size === 0) return entries;
+  return entries.filter((e) => !excludeTypes.has(e.type));
+}
+
 function renderPage(member, mediaResult, devices) {
-  const { entries } = mediaResult;
+  const entries = applyMediaFilter(mediaResult.entries, member.mediaFilter);
   const blurb = INTRO_BLURB[member.name];
   const facts = deriveIntroFacts(devices);
   const cols = detectColumns(entries);
@@ -416,7 +423,10 @@ function main() {
     mkdirSync(destDir, { recursive: true });
     const destPath = join(destDir, 'media.md');
     writeFileSync(destPath, renderPage(m, mediaResult, devices));
-    log(`${m.name}: ${mediaResult.entries.length} media entries, wrote docs/${m.name}/media.md`);
+    const total = mediaResult.entries.length;
+    const surfaced = applyMediaFilter(mediaResult.entries, m.mediaFilter).length;
+    const countLabel = surfaced === total ? `${total} entries` : `${surfaced} / ${total} entries (filtered)`;
+    log(`${m.name}: ${countLabel}, wrote docs/${m.name}/media.md`);
     wrote++;
   }
   log(`wrote ${wrote} media page${wrote === 1 ? '' : 's'}`);
