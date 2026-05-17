@@ -37,8 +37,8 @@ features:
     linkText: Architecture overview
   - icon: 🧪
     title: Browser hardware harness
-    details: Pair a printer over WebUSB, run a one-page diagnostic print, and file a verification report against the registry — straight from the browser. Shipped for LabelManager, LabelWriter, and Brother QL.
-    link: https://thermal-label.github.io/harness/labelmanager/
+    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report against the registry — straight from the browser. One app per family — Brother QL, LabelManager, LabelWriter, and LetraTag.
+    link: /harness/
     linkText: Open the harness
   - icon: ⌨️
     title: thermal-label-cli
