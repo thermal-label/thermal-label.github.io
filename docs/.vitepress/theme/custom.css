@@ -147,3 +147,30 @@ body.hw-table-hydrated .hw-static-fallback {
     linear-gradient(-45deg, transparent 75%, #444 75%) -4px 0 / 8px 8px,
     #2a2a2a;
 }
+
+/* Home feature grid — a deliberate 3×2. With five features VitePress's
+   count-driven sizing falls to a 4-up row plus a lone orphan; pin every
+   card to one-third width and let the hardware-harness card (the last
+   feature in docs/index.md) span two columns. The five cards then tile a
+   clean 3×2 — three across, then thermal-label-cli and the wide harness
+   card. Keep the harness feature last in docs/index.md, or move the
+   :nth-child below to match. */
+@media (min-width: 768px) {
+  .VPFeatures .items .item {
+    width: calc(100% / 3) !important;
+  }
+  .VPFeatures .items .item:nth-child(5) {
+    width: calc(200% / 3) !important;
+  }
+}
+
+/* The harness card is the home page's primary call to action. Spanning
+   two columns already sets it apart; a faint warm wash and soft border
+   nudge it a little further without shouting. */
+.VPFeatures .items .item:nth-child(5) .VPFeature {
+  border-color: var(--vp-c-brand-soft);
+  background-color: rgba(236, 106, 64, 0.06);
+}
+.dark .VPFeatures .items .item:nth-child(5) .VPFeature {
+  background-color: rgba(245, 158, 11, 0.07);
+}

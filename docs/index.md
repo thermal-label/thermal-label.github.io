@@ -35,16 +35,18 @@ features:
     details: Brother QL raster, Brother PT raster, DYMO D1 tape, LW 450 raster, LW 550 raster, LabelWriter Duo tape, LetraTag BT — opcodes, status frames, compression, all documented.
     link: /guide/architecture
     linkText: Architecture overview
-  - icon: 🧪
-    title: Verify your printer in the browser
-    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report — straight from the browser, no install. Two minutes turns an "untested" row into a "verified" one for everyone who buys the same model. One harness app per family — Brother QL, LabelManager, LabelWriter, and LetraTag.
-    link: /harness/
-    linkText: Open the harness
   - icon: ⌨️
     title: thermal-label-cli
     details: List printers, read status frames, push quick text or image jobs from the shell. Intentionally small — diagnostics and scripts, not a layout engine.
     link: /cli/
     linkText: CLI overview
+  # Last feature: docs/.vitepress/theme/custom.css spans this card two
+  # columns wide and tints it (the 3×2 home grid). Keep it last.
+  - icon: 🧪
+    title: Verify your printer in the browser
+    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report — straight from the browser, no install. Two minutes turns an "untested" row into a "verified" one for everyone who buys the same model. One harness app per family — Brother QL, LabelManager, LabelWriter, and LetraTag.
+    link: /harness/
+    linkText: Open the harness
 ---
 
 ## 🖨️ Hardware coverage at a glance
