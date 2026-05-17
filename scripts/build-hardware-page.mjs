@@ -1167,22 +1167,22 @@ function renderApiIndex(driver, packages) {
   });
 
   const sections = [
-    `# ${driver.displayName} — API reference`,
+    `# \`${corePkg}\` — API reference`,
     `Generated TypeDoc reference for every package in the \`${corePkg}-*\` family. ` +
     `These pages cover the **public surface** — exported classes, interfaces, ` +
     `functions, type aliases, and variables. ` +
     `For installation, examples, and the wire-protocol references, ` +
-    `start at the [${driver.displayName} overview](../).`,
+    `start at the [overview](../).`,
     '## Packages',
     lines.length > 0 ? lines.join('\n') : '_No TypeDoc packages detected — re-run `pnpm docs:api` in the driver repo._',
     '::: info Want a guided tour first?',
-    `The [${driver.displayName} overview](../) lists installation, transports, hardware, and wire protocols before you dive into the typed API.`,
+    `The [overview](../) lists installation, transports, hardware, and wire protocols before you dive into the typed API.`,
     ':::',
   ];
 
   const frontmatter = [
     '---',
-    `title: ${escapeYamlValue(`API reference — ${driver.displayName}`)}`,
+    `title: ${escapeYamlValue(`API reference — ${corePkg}`)}`,
     `description: ${escapeYamlValue(`TypeDoc-generated API reference for the ${corePkg}-* packages.`)}`,
     '---',
     '',
