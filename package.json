@@ -11,7 +11,8 @@
     "docs:media": "node scripts/build-media-pages.mjs",
     "docs:connecting": "node scripts/build-connecting-page.mjs",
     "docs:matrix": "node scripts/build-matrix-page.mjs",
-    "docs:prep": "npm run verify-suite-config && npm run docs:pull && npm run docs:hardware && npm run docs:catalog && npm run docs:media && npm run docs:connecting && npm run docs:matrix",
+    "docs:harness": "node scripts/pull-harness-bundles.mjs",
+    "docs:prep": "npm run verify-suite-config && npm run docs:pull && npm run docs:hardware && npm run docs:catalog && npm run docs:media && npm run docs:connecting && npm run docs:matrix && npm run docs:harness",
     "docs:dev": "npm run docs:prep && vitepress dev docs",
     "docs:build": "npm run docs:prep && vitepress build docs",
     "docs:preview": "vitepress preview docs"

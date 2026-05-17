@@ -52,6 +52,10 @@
           "type": "boolean",
           "description": "Driver-only flag. Defaults to true. Set false to keep the driver in drivers.json (so the matrix sees its data/devices.json) without requiring its npm package to be installed yet — used while a new driver is incoming and not yet released."
         },
+        "harness": {
+          "type": "boolean",
+          "description": "Driver-only flag. Defaults to false. Set true when the harness monorepo ships a `harness-<name>` app, released as a `harness-<name>-v*` tag on thermal-label/harness. scripts/pull-harness-bundles.mjs downloads the newest such release's zip and extracts it to docs/public/harness/<name>/, which VitePress serves at /harness/<name>/."
+        },
         "enabled": {
           "type": "boolean",
           "description": "Defaults to true. Set false to fully exclude the member from every build step — docs pull, hardware pages, media catalogues, compatibility matrix, and site nav — while keeping its drivers.json entry (and any package.json dep) intact, so re-enabling is a single flag flip. Distinct from `published`, which still surfaces a driver in the matrix."

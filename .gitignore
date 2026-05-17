@@ -22,10 +22,11 @@ docs/niimbot/
 docs/cli/
 
 # `docs/public/` itself is build-relocated content (pull-driver-docs.mjs
-# moves each driver's public/ tree under docs/public/<driver>/). Hand-
-# authored static assets live under docs/public/icons/ and must be
-# tracked, so we ignore the directory contents but un-ignore the icons
-# subtree explicitly.
+# moves each driver's public/ tree under docs/public/<driver>/;
+# pull-harness-bundles.mjs drops each harness app's released bundle under
+# docs/public/harness/<driver>/). Hand-authored static assets live under
+# docs/public/icons/ and must be tracked, so we ignore the directory
+# contents but un-ignore the icons subtree explicitly.
 docs/public/*
 !docs/public/icons
 !docs/public/icons/**

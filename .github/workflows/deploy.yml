@@ -50,6 +50,15 @@ jobs:
           fi
           npm run docs:pull
       - run: npm run docs:hardware
+      - name: Pull harness bundles
+        # Downloads each `harness: true` driver's latest harness-<driver>-v*
+        # release zip from thermal-label/harness into docs/public/harness/.
+        # GITHUB_TOKEN only lifts the API rate limit — the harness repo is
+        # public, so this works unauthenticated too. A driver with no
+        # release yet is skipped with a warning (see pull-harness-bundles.mjs).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run docs:harness
       - run: npx vitepress build docs
       - uses: actions/upload-pages-artifact@v3
         with:
