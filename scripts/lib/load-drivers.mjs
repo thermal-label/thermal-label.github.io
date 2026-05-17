@@ -11,13 +11,25 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 export const SITE_ROOT = resolve(SCRIPT_DIR, '..', '..');
 export const DRIVERS_JSON_PATH = join(SITE_ROOT, 'drivers.json');
 
-export function loadDrivers() {
+// Every member in drivers.json, including entries flagged `enabled:
+// false`. Only verify-suite-config needs this — it must still police a
+// disabled driver's (deliberately retained) package.json dep. All
+// build steps go through loadDrivers() below.
+export function loadAllMembers() {
   const raw = readFileSync(DRIVERS_JSON_PATH, 'utf8');
   const parsed = JSON.parse(raw);
   if (!parsed || !Array.isArray(parsed.members)) {
     throw new Error('drivers.json: expected { members: [...] }');
   }
   return parsed.members;
+}
+
+// Members the docs build acts on. Entries flagged `enabled: false` are
+// kept in drivers.json (config preserved for a later re-enable) but
+// dropped from every build step — docs pull, hardware pages, media
+// catalogues, compatibility matrix, site nav.
+export function loadDrivers() {
+  return loadAllMembers().filter(m => m.enabled !== false);
 }
 
 export function driverMembers(members) {

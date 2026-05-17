@@ -9,14 +9,17 @@ interface SuiteMember {
   displayName?: string;
   manufacturer?: string;
   pkg?: string;
+  enabled?: boolean;
 }
 
 const MEMBERS = driversManifest.members as SuiteMember[];
 // Nav order mirrors drivers.json order: shared/protocol-core/tool first
 // in their declared order, drivers in their declared order. That keeps
 // the canonical browse path (contracts → transport → drivers → cli)
-// without re-encoding it here.
-const NAV_PACKAGES = MEMBERS.map(m => ({
+// without re-encoding it here. `enabled: false` members are excluded
+// from the build (no docs/<name>/ is pulled), so they must drop out of
+// the nav too — otherwise the link dead-ends.
+const NAV_PACKAGES = MEMBERS.filter(m => m.enabled !== false).map(m => ({
   text: m.name,
   link: `/${m.name}/`,
 }));
@@ -54,19 +57,16 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
+      // Hardware is the most-asked question — a prime link, not buried
+      // in a dropdown. The wishlist is reached from the matrix page
+      // itself rather than a nav sub-item.
+      { text: 'Hardware', link: '/hardware/' },
       { text: 'Guide', link: '/guide/introduction' },
       {
         text: 'Packages',
         items: NAV_PACKAGES,
       },
-      {
-        text: 'Hardware',
-        items: [
-          { text: 'Compatibility matrix', link: '/hardware/' },
-          { text: 'Wishlist', link: '/hardware/wishlist' },
-        ],
-      },
-      { text: 'Related orgs', link: '/related-orgs' },
+      { text: 'See also', link: '/see-also' },
     ],
 
     sidebar: {

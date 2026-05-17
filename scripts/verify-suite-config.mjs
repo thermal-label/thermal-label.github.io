@@ -14,7 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadDrivers, SITE_ROOT } from './lib/load-drivers.mjs';
+import { loadAllMembers, SITE_ROOT } from './lib/load-drivers.mjs';
 
 function fail(msg) {
   process.stderr.write(`[verify-suite-config] error: ${msg}\n`);
@@ -25,7 +25,10 @@ function log(msg) {
   process.stdout.write(`[verify-suite-config] ${msg}\n`);
 }
 
-const members = loadDrivers();
+// Verify against the *full* manifest, disabled entries included — a
+// `enabled: false` driver keeps its drivers.json entry and package.json
+// dep on purpose, and both must still pass shape + alignment checks.
+const members = loadAllMembers();
 
 // Uniqueness.
 const seen = new Set();
@@ -35,7 +38,11 @@ for (const m of members) {
 }
 
 const drivers = members.filter(m => m.kind === 'driver');
-const publishedDrivers = drivers.filter(d => d.published !== false);
+// `enabled: false` drivers are excluded from the build entirely, so they
+// are not subject to the published-dep cross-check below — but they are
+// still shape-checked, and their retained -core dep is allowlisted.
+const disabledDrivers = drivers.filter(d => d.enabled === false);
+const publishedDrivers = drivers.filter(d => d.published !== false && d.enabled !== false);
 for (const d of drivers) {
   if (!d.displayName) fail(`driver ${d.name}: missing displayName`);
   if (!d.manufacturer) fail(`driver ${d.name}: missing manufacturer`);
@@ -72,7 +79,15 @@ if (missing.length > 0) {
 const protocolCorePkgs = new Set(
   members.filter(m => m.kind === 'protocol-core').map(m => `@thermal-label/${m.name}`),
 );
-const stray = declaredCorePkgs.filter(k => !publishedPkgs.has(k) && !protocolCorePkgs.has(k));
+// An `enabled: false` driver's -core dep may or may not still be in
+// package.json — not-yet-published ones are dropped (their `file:` path
+// won't resolve on CI), a published-but-hidden one may keep it.
+// Allowlist their pkgs either way so the stray check never trips on a
+// disabled entry.
+const disabledPkgs = new Set(disabledDrivers.map(d => d.pkg));
+const stray = declaredCorePkgs.filter(
+  k => !publishedPkgs.has(k) && !protocolCorePkgs.has(k) && !disabledPkgs.has(k),
+);
 if (stray.length > 0) {
   fail(
     `package.json has @thermal-label/*-core deps with no published driver entry: ${stray.join(', ')}\n` +
@@ -80,4 +95,8 @@ if (stray.length > 0) {
   );
 }
 
-log(`ok — ${members.length} members (${drivers.length} drivers, ${publishedDrivers.length} published), package.json deps aligned.`);
+log(
+  `ok — ${members.length} members (${drivers.length} drivers, ` +
+  `${publishedDrivers.length} published, ${disabledDrivers.length} disabled), ` +
+  `package.json deps aligned.`,
+);
