@@ -290,9 +290,6 @@ function renderMatrixPage(matrixData, publishedSet) {
     `**Partial** / **Unsupported** = directly observed limits, ` +
     `**Unverified** = no claim recorded yet.`,
     '',
-    'Missing a printer, or want to help close a gap? See the ' +
-    '[hardware wishlist](./wishlist).',
-    '',
     '<CompatibilityMatrix />',
     '',
     '<div class="hw-static-fallback">',

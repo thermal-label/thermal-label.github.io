@@ -33,11 +33,8 @@ docs/public/*
 !docs/public/robots.txt
 
 # Generated at build time by scripts/build-hardware-page.mjs +
-# scripts/build-matrix-page.mjs. The wishlist is hand-authored so it's
-# un-ignored explicitly. Note: the parent must be ignored as `*` rather
-# than as a directory to allow the negation to take effect on a child.
+# scripts/build-matrix-page.mjs.
 docs/hardware/*
-!docs/hardware/wishlist.md
 
 # Generated at build time by scripts/build-connecting-page.mjs.
 docs/connecting.md

@@ -58,8 +58,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       // Hardware is the most-asked question — a prime link, not buried
-      // in a dropdown. The wishlist is reached from the matrix page
-      // itself rather than a nav sub-item.
+      // in a dropdown.
       { text: 'Hardware', link: '/hardware/' },
       { text: 'Guide', link: '/guide/introduction' },
       {
