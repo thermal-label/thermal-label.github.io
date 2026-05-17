@@ -36,8 +36,8 @@ features:
     link: /guide/architecture
     linkText: Architecture overview
   - icon: 🧪
-    title: Browser hardware harness
-    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report against the registry — straight from the browser. One app per family — Brother QL, LabelManager, LabelWriter, and LetraTag.
+    title: Verify your printer in the browser
+    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report — straight from the browser, no install. Two minutes turns an "untested" row into a "verified" one for everyone who buys the same model. One harness app per family — Brother QL, LabelManager, LabelWriter, and LetraTag.
     link: /harness/
     linkText: Open the harness
   - icon: ⌨️
@@ -45,11 +45,6 @@ features:
     details: List printers, read status frames, push quick text or image jobs from the shell. Intentionally small — diagnostics and scripts, not a layout engine.
     link: /cli/
     linkText: CLI overview
-  - icon: ✅
-    title: Verify your printer
-    details: A two-minute checklist turns an "untested" row into a "verified" one. Reports land in the registry and help everyone who buys the same model.
-    link: https://github.com/thermal-label/.github/blob/main/CONTRIBUTING/verifying-hardware.md
-    linkText: Verification guide
 ---
 
 ## 🖨️ Hardware coverage at a glance

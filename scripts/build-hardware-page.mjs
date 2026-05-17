@@ -862,9 +862,9 @@ thermal-label driver. Each row links to a per-device page with
 transports, engines, supported media, and verification reports.
 
 ::: tip Verify your device
-A two-minute test helps everyone who buys one of these printers. See
-the [verification guide](https://github.com/thermal-label/.github/blob/main/CONTRIBUTING/verifying-hardware.md)
-for what to run and how to file a report.
+A two-minute test helps everyone who buys one of these printers. Open the
+[browser hardware harness](/harness/) — it walks you through a diagnostic
+print and a verification report, no install.
 :::
 
 <small>Generated ${data.generatedAt} from \`@thermal-label/*-core\`
