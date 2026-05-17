@@ -39,6 +39,7 @@ const DRIVERS = publishedDriverMembers(loadDrivers()).map(m => ({
   displayName: m.displayName,
   pkg: m.pkg,
   manufacturer: m.manufacturer,
+  harness: m.harness ?? false,
 }));
 
 // Map every (family, engine.protocol) the registry surfaces to the
@@ -623,11 +624,21 @@ function renderHero(dev, driver, issuesUrl) {
     ? `Got a **${dev.name}**? A two-minute test report turns this from **${statusBadgeInline(status)}** into **✅ verified** for everyone who buys the same model.`
     : `Got a **${dev.name}**? A fresh test report against the latest \`${driver.pkg}\` keeps this entry honest — driver versions move faster than verifications.`;
 
+  // The browser harness is the front door for a verification report —
+  // pair the printer, run a diagnostic print, submit (it prefills the
+  // GitHub issue itself). Point the verify CTA at the driver's own
+  // harness when it has one; fall back to a raw prefilled issue. The
+  // harness URL must be absolute — /harness/<driver>/ is a public-dir
+  // bundle, not a VitePress route, so a root-relative link dead-links.
+  const verifyCta = driver.harness
+    ? `[**Verify it in the browser →**](https://thermal-label.github.io/harness/${driver.name}/)  `
+    : `[**File a test report →**](${links.verify})  `;
+
   return [
     '::: info ✋ Help verify this printer',
     lead,
     '',
-    `[**File a test report →**](${links.verify})  `,
+    verifyCta,
     `[**Report a bug →**](${links.bug})`,
     ':::',
   ].join('\n');
@@ -641,8 +652,11 @@ function renderFooterCta(dev, driver, issuesUrl) {
   // straight to that file beats a generic "edit this page" link to a
   // generated .md that gets overwritten on every build.
   const dataUrl = `https://github.com/thermal-label/${driver.name}/edit/main/packages/core/data/devices/${dev.key}.json5`;
+  const verifyCta = driver.harness
+    ? `[**Have one of these? Verify it in the browser →**](https://thermal-label.github.io/harness/${driver.name}/)`
+    : `[**Have one of these? File a verification report →**](${links.verify})`;
   return [
-    `[**Have one of these? File a verification report →**](${links.verify})`,
+    verifyCta,
     `[**Found a bug? →**](${links.bug})`,
     `[**Spotted an error on this page? Edit the device data →**](${dataUrl})`,
   ].join('  \n');
