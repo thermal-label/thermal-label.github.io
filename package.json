@@ -20,18 +20,14 @@
     "@mbtech-nl/bitmap": "^1.2.0",
     "@thermal-label/brother-ql-core": "file:../brother-ql/packages/core",
     "@thermal-label/brother-ql-web": "file:../brother-ql/packages/web",
-    "@thermal-label/cat-printer-core": "file:../cat-printer/packages/core",
-    "@thermal-label/contracts": "file:../contracts",
-    "@thermal-label/d1-core": "file:../d1-core",
-    "@thermal-label/labelife-core": "file:../labelife/packages/core",
+    "@thermal-label/contracts": "^0.6.0",
+    "@thermal-label/d1-core": "^0.6.0",
     "@thermal-label/labelmanager-core": "file:../labelmanager/packages/core",
     "@thermal-label/labelmanager-web": "file:../labelmanager/packages/web",
     "@thermal-label/labelwriter-core": "file:../labelwriter/packages/core",
     "@thermal-label/labelwriter-web": "file:../labelwriter/packages/web",
     "@thermal-label/letratag-core": "file:../letratag/packages/core",
-    "@thermal-label/marklife-core": "file:../marklife/packages/core",
-    "@thermal-label/niimbot-core": "file:../niimbot/packages/core",
-    "@thermal-label/transport": "file:../transport"
+    "@thermal-label/transport": "^0.6.0"
   },
   "devDependencies": {
     "vitepress": "^1.6.3"
@@ -39,17 +35,13 @@
   "overrides": {
     "@thermal-label/brother-ql-core": "$@thermal-label/brother-ql-core",
     "@thermal-label/brother-ql-web": "$@thermal-label/brother-ql-web",
-    "@thermal-label/cat-printer-core": "$@thermal-label/cat-printer-core",
     "@thermal-label/contracts": "$@thermal-label/contracts",
     "@thermal-label/d1-core": "$@thermal-label/d1-core",
-    "@thermal-label/labelife-core": "$@thermal-label/labelife-core",
     "@thermal-label/labelmanager-core": "$@thermal-label/labelmanager-core",
     "@thermal-label/labelmanager-web": "$@thermal-label/labelmanager-web",
     "@thermal-label/labelwriter-core": "$@thermal-label/labelwriter-core",
     "@thermal-label/labelwriter-web": "$@thermal-label/labelwriter-web",
     "@thermal-label/letratag-core": "$@thermal-label/letratag-core",
-    "@thermal-label/marklife-core": "$@thermal-label/marklife-core",
-    "@thermal-label/niimbot-core": "$@thermal-label/niimbot-core",
     "@thermal-label/transport": "$@thermal-label/transport"
   }
 }
