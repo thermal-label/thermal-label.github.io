@@ -183,99 +183,86 @@ function pullOne(entry) {
   }
 }
 
-// Per-driver `packages/core/data/devices.json` is the rich projection
-// emitted by each driver's codegen — `verificationGrid`, `supportStatus`,
-// and friends. The compatibility matrix reads these files; missing one
-// is a hard fail, in line with the "transport assumed-correct" axiom
+// `devices.json` (the rich projection emitted by each driver's
+// `compile-data` codegen — `verificationGrid`, `supportStatus`, …) and
+// `media.json` (the compiled media catalogue) are **gitignored in the
+// driver repos** — they are generated artifacts, never committed, so a
+// git clone of the repo does not carry them. They ship instead inside
+// the published `-core` npm package (declared in its `files`), which the
+// docs site already depends on at a pinned version. That installed
+// package is therefore the source of truth.
+//
+// `repoRelPath` is where the file sits in a repo / sibling checkout;
+// `pkgRelPath` is where it sits inside the installed npm package (the
+// `packages/core/` monorepo layer collapses to the package root).
+// Returns `{ path, source }` or null.
+function resolveGeneratedDataFile(member, repoRelPath, pkgRelPath) {
+  // 1. Explicit env override pointing at a local checkout — lets the
+  //    maintainer preview freshly-compiled data without a publish.
+  const override = process.env[envKey(member.name)];
+  if (override && isDir(override)) {
+    const p = join(override, repoRelPath);
+    if (existsSync(p)) return { path: p, source: `override ${override}` };
+  }
+  // 2. The installed npm package. The only source that resolves on a
+  //    lone CI checkout, and it keeps a local `docs:build` faithful to CI.
+  const pkg = member.pkg ?? `@thermal-label/${member.name}`;
+  const fromPkg = join(SITE_ROOT, 'node_modules', pkg, pkgRelPath);
+  if (existsSync(fromPkg)) return { path: fromPkg, source: `npm ${pkg}` };
+  // 3. Sibling checkout — covers an incoming `published: false` driver
+  //    with no npm release yet (or a published version that predates
+  //    shipping the data). Never reachable on a lone CI runner.
+  const sib = join(resolve(SITE_ROOT, '..', member.name), repoRelPath);
+  if (existsSync(sib)) return { path: sib, source: 'sibling checkout' };
+  return null;
+}
+
+// The compatibility matrix reads every driver's devices.json; a missing
+// one is a hard fail, in line with the "transport assumed-correct" axiom
 // (broken upstream is a release bug, not a runtime nuance).
 function pullDeviceData(member) {
   const destPath = join(AGG_DEVICES_DIR, `${member.name}.json`);
-  const override = process.env[envKey(member.name)];
-
-  let sourcePath;
-  let cleanup;
-
-  if (override) {
-    if (isDir(override)) {
-      sourcePath = join(override, 'packages', 'core', 'data', 'devices.json');
-    } else {
-      const stage = shallowClone(member.name, override);
-      sourcePath = join(stage, 'packages', 'core', 'data', 'devices.json');
-      cleanup = () => rmSync(stage, { recursive: true, force: true });
-    }
-  } else {
-    const sibling = resolve(SITE_ROOT, '..', member.name);
-    if (isDir(sibling)) {
-      sourcePath = join(sibling, 'packages', 'core', 'data', 'devices.json');
-    } else {
-      const stage = shallowClone(member.name, member.ref);
-      sourcePath = join(stage, 'packages', 'core', 'data', 'devices.json');
-      cleanup = () => rmSync(stage, { recursive: true, force: true });
-    }
-  }
-
-  if (!existsSync(sourcePath)) {
-    cleanup?.();
+  const found = resolveGeneratedDataFile(
+    member,
+    join('packages', 'core', 'data', 'devices.json'),
+    join('data', 'devices.json'),
+  );
+  if (!found) {
     fail(
-      `${member.name}: data/devices.json not found at ${sourcePath} — ` +
-      `every driver-kind member must publish a rich projection on its pinned ref. ` +
-      `Run \`pnpm compile-data\` in the driver repo or fix drivers.json.`,
+      `${member.name}: devices.json not found. The published ${member.pkg} ` +
+      `must ship data/devices.json — add it to that package's \`files\` and ` +
+      `release, then \`npm install\` here to pick it up. (For an unpublished ` +
+      `driver, \`pnpm compile-data\` in its sibling checkout.)`,
     );
   }
-
-  copyFileSync(sourcePath, destPath);
-  cleanup?.();
-  log(`${member.name}: data/devices.json → .aggregate/devices/${member.name}.json`);
+  copyFileSync(found.path, destPath);
+  log(`${member.name}: devices.json (${found.source}) → .aggregate/devices/${member.name}.json`);
 }
 
-// Pull each member's compiled media catalogue (paired with its
-// `media.json5` source) into `.aggregate/media/<name>.json`. The repo-
-// relative path is declared in drivers.json as `mediaDataFile`; most
-// drivers carry `packages/core/data/media.json`, but d1-core lives at
-// `data/media.json` (no packages/ layer — it's a single-package repo).
-// Members without a `mediaDataFile` are skipped — labelmanager doesn't
-// have its own catalogue and consumes d1-core's shared D1 entries at
-// runtime, so its docs/labelmanager/media.md is intentionally not
-// generated here.
+// Pull each member's compiled media catalogue into
+// `.aggregate/media/<name>.json`. drivers.json declares the repo-relative
+// path as `mediaDataFile` (most drivers `packages/core/data/media.json`,
+// d1-core just `data/media.json`); inside the npm package both collapse
+// to `data/media.json`. Members without a `mediaDataFile` are skipped —
+// labelmanager has no catalogue of its own and consumes d1-core's shared
+// D1 entries, so docs/labelmanager/media.md is intentionally not built.
 function pullMediaData(member) {
   if (!member.mediaDataFile) return false;
   const destPath = join(AGG_MEDIA_DIR, `${member.name}.json`);
-  const override = process.env[envKey(member.name)];
-
-  let sourcePath;
-  let cleanup;
-
-  if (override) {
-    if (isDir(override)) {
-      sourcePath = join(override, member.mediaDataFile);
-    } else {
-      const stage = shallowClone(member.name, override);
-      sourcePath = join(stage, member.mediaDataFile);
-      cleanup = () => rmSync(stage, { recursive: true, force: true });
-    }
-  } else {
-    const sibling = resolve(SITE_ROOT, '..', member.name);
-    if (isDir(sibling)) {
-      sourcePath = join(sibling, member.mediaDataFile);
-    } else {
-      const stage = shallowClone(member.name, member.ref);
-      sourcePath = join(stage, member.mediaDataFile);
-      cleanup = () => rmSync(stage, { recursive: true, force: true });
-    }
-  }
-
-  if (!existsSync(sourcePath)) {
-    cleanup?.();
+  const found = resolveGeneratedDataFile(
+    member,
+    member.mediaDataFile,
+    member.mediaDataFile.replace(/^packages\/core\//, ''),
+  );
+  if (!found) {
     fail(
-      `${member.name}: mediaDataFile not found at ${sourcePath} — ` +
-      `drivers.json declares mediaDataFile="${member.mediaDataFile}" but the file is missing. ` +
-      `Run \`pnpm compile-data\` in the source repo or drop the declaration.`,
+      `${member.name}: mediaDataFile "${member.mediaDataFile}" not found. The ` +
+      `published package must ship it — add it to that package's \`files\` and ` +
+      `release, then \`npm install\` here. (Or \`pnpm compile-data\` in the sibling.)`,
     );
   }
-
-  copyFileSync(sourcePath, destPath);
-  cleanup?.();
-  log(`${member.name}: ${member.mediaDataFile} → .aggregate/media/${member.name}.json`);
+  copyFileSync(found.path, destPath);
+  log(`${member.name}: media.json (${found.source}) → .aggregate/media/${member.name}.json`);
   return true;
 }
 
