@@ -4,25 +4,25 @@ layout: home
 hero:
   name: thermal-label
   text: TypeScript drivers for thermal printers
-  tagline: 54 supported devices across Brother QL and DYMO. Six transports. Reverse-engineered wire-protocol references. MIT-licensed, no vendor SDK.
+  tagline: 55 supported devices across Brother QL and DYMO. Six transports. Reverse-engineered wire-protocol references. MIT-licensed, no vendor SDK.
   actions:
     - theme: brand
-      text: Browse 54 devices
+      text: Browse 55 devices
       link: /hardware/
     - theme: alt
       text: Introduction
       link: /guide/introduction
     - theme: alt
       text: Hardware harness
-      link: https://thermal-label.github.io/harness/labelmanager/
+      link: /harness/
     - theme: alt
       text: GitHub org
       link: https://github.com/thermal-label
 
 features:
   - icon: 🖨️
-    title: 54 devices, one table
-    details: Brother QL DK-tape, Brother PT-P/PT-E TZe tape, DYMO LabelManager D1 tape, DYMO LabelWriter die-cut. Filter by family, transport, and verification status.
+    title: 55 devices, one table
+    details: Brother QL DK-tape, Brother PT-P/PT-E TZe tape, DYMO LabelManager D1 tape, DYMO LabelWriter die-cut, DYMO LetraTag LT tape. Filter by family, transport, and verification status.
     link: /hardware/
     linkText: Open hardware coverage
   - icon: 🔌
@@ -32,12 +32,12 @@ features:
     linkText: Transport reference
   - icon: 📜
     title: Wire-protocol references
-    details: Brother QL raster, Brother PT raster, DYMO D1 tape, LW 450 raster, LW 550 raster, LabelWriter Duo tape — opcodes, status frames, compression, all documented.
+    details: Brother QL raster, Brother PT raster, DYMO D1 tape, LW 450 raster, LW 550 raster, LabelWriter Duo tape, LetraTag BT — opcodes, status frames, compression, all documented.
     link: /guide/architecture
     linkText: Architecture overview
   - icon: 🧪
     title: Browser hardware harness
-    details: Pair a printer over WebUSB, run a one-page diagnostic print, and file a verification report against the registry — straight from the browser. Shipped for LabelManager and LabelWriter; brother-ql harness is bench-only for now.
+    details: Pair a printer over WebUSB, run a one-page diagnostic print, and file a verification report against the registry — straight from the browser. Shipped for LabelManager, LabelWriter, and Brother QL.
     link: https://thermal-label.github.io/harness/labelmanager/
     linkText: Open the harness
   - icon: ⌨️
@@ -54,15 +54,16 @@ features:
 
 ## 🖨️ Hardware coverage at a glance
 
-The contracts-shape `DEVICES` registry across the three driver packages currently lists **54 printers**. Each row links to a per-device page with transports, engines, supported media, and verification reports.
+The contracts-shape `DEVICES` registry across the four driver packages currently lists **55 printers**. Each row links to a per-device page with transports, engines, supported media, and verification reports.
 
 | Family | Devices | Tape / label model | Transports |
 |---|---:|---|---|
 | 🟦 [**Brother QL**](/brother-ql/hardware) | 24 | DK rolls (QL series) and TZe / HSe tape (PT-P, PT-E) | USB, TCP, Bluetooth SPP, Bluetooth GATT |
 | 🟧 [**DYMO LabelManager**](/labelmanager/hardware) | 8 | D1 tape, single colour | USB, Bluetooth GATT |
 | 🟥 [**DYMO LabelWriter**](/labelwriter/hardware) | 22 | Pre-cut die-cut labels (550/5XL require NFC-locked DYMO media) | USB, Web Bluetooth on selected models |
+| 🟨 [**DYMO LetraTag**](/letratag/hardware) | 1 | LT label cassettes | Web Bluetooth |
 
-→ [**Browse all 54 devices in the interactive table**](/hardware/)
+→ [**Browse all 55 devices in the interactive table**](/hardware/)
 
 ## 📜 Wire-protocol references
 
@@ -73,12 +74,14 @@ If you are reverse-engineering, porting to another language, or auditing a paylo
 - [**DYMO D1 tape**](/d1-core/protocol) — LabelManager command stream and the LW Duo's tape engine, shared in `@thermal-label/d1-core`.
 - [**LabelWriter raster**](/labelwriter/protocol/lw-raster) — classic LW 3xx/4xx generation (incl. SE450, Twin Turbo, Wireless, Duo label side).
 - [**LabelWriter 5xx raster**](/labelwriter/protocol/lw5-raster) — LW 5xx generation, including NFC media gate.
+- [**LetraTag BT**](/letratag/protocol/letratag-bt) — DYMO LetraTag LT-200B, the Bluetooth-LE label maker.
 
 ## 📦 Pick a driver
 
 - [**@thermal-label/brother-ql-***](/brother-ql/) — `core` + `node` + `web` + hardware + protocol + verification checklist.
 - [**@thermal-label/labelmanager-***](/labelmanager/) — D1 tape lineup, USB and Web Bluetooth.
 - [**@thermal-label/labelwriter-***](/labelwriter/) — die-cut LabelWriter family, including the Duo composite device.
+- [**@thermal-label/letratag-***](/letratag/) — DYMO LetraTag LT-200B over Web Bluetooth.
 - [**@thermal-label/contracts**](/contracts/) — the type-only surface (`Transport`, `PrinterAdapter`, `PrinterDiscovery`, media, status, errors) every driver targets.
 - [**@thermal-label/transport**](/transport/) — six concrete transport classes behind one interface.
 - [**thermal-label-cli**](/cli/) — `thermal-label` command for discovery, status, and quick prints.
@@ -97,4 +100,4 @@ If you need **templates, barcodes, CSV batches, and sheet PDFs**, pair these dri
 - **[tylercrumpton/brotherql-webusb](https://github.com/tylercrumpton/brotherql-webusb)** — JavaScript / WebUSB port of `brother_ql`.
 - **[labelle-org/labelle](https://github.com/labelle-org/labelle)** — Python implementation of the DYMO LabelManager protocol.
 
-→ More on the [related organizations](/related-orgs) page.
+→ Full list on the [See also](/see-also) page.

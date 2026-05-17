@@ -61,6 +61,5 @@ The shared playbook these three were built against is captured in
 ## Read next
 
 The [full contributor guide][full] expands every section above into a concrete
-walkthrough with skeleton code. Pre-1.0, it is still a stub being grown — open
-issues on `.github` if you find gaps while writing your driver, and we'll fold
-the answers back into the guide.
+walkthrough with skeleton code. If you find gaps while writing your driver,
+open an issue on `.github` and we'll fold the answers back into the guide.
