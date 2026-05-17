@@ -35,31 +35,30 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Pull per-repo docs
+      - name: Build docs site
+        # Runs the whole `docs:build` — verify-suite-config, docs:pull,
+        # docs:hardware, docs:catalog, docs:media, docs:connecting,
+        # docs:matrix, docs:harness, then `vitepress build`. Run the full
+        # pipeline, never a hand-picked subset: a partial prep leaves
+        # generated pages (docs/hardware/index.md, docs/connecting.md,
+        # docs/<driver>/media.md, …) missing and the build dead-links on
+        # them. This keeps CI identical to a local `npm run docs:build`.
         env:
-          # repository_dispatch payload may pin a single source repo to a
-          # specific ref; pass it through as the appropriate env var so the
-          # puller picks it up.
+          # A repository_dispatch payload may pin one source repo to a
+          # specific ref; pass it through so pull-driver-docs picks it up.
           DISPATCH_REPO: ${{ github.event.client_payload.repo }}
           DISPATCH_REF: ${{ github.event.client_payload.ref }}
+          # Lifts the GitHub API rate limit for the harness-bundle pull
+          # (docs:harness); the harness repo is public so it also works
+          # unauthenticated.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -n "$DISPATCH_REPO" ] && [ -n "$DISPATCH_REF" ]; then
             UPPER=$(echo "$DISPATCH_REPO" | tr '[:lower:]-' '[:upper:]_')
             export "TL_DOCS_${UPPER}=${DISPATCH_REF}"
             echo "Pinning $DISPATCH_REPO to $DISPATCH_REF"
           fi
-          npm run docs:pull
-      - run: npm run docs:hardware
-      - name: Pull harness bundles
-        # Downloads each `harness: true` driver's latest harness-<driver>-v*
-        # release zip from thermal-label/harness into docs/public/harness/.
-        # GITHUB_TOKEN only lifts the API rate limit — the harness repo is
-        # public, so this works unauthenticated too. A driver with no
-        # release yet is skipped with a warning (see pull-harness-bundles.mjs).
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run docs:harness
-      - run: npx vitepress build docs
+          npm run docs:build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
