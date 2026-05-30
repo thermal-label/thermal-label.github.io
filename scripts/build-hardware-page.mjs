@@ -192,12 +192,27 @@ function repoIssuesUrl(pkgJson) {
   return url.replace(/^git\+/, '').replace(/\.git$/, '') + '/issues';
 }
 
-async function loadDriverData(pkg) {
-  const mod = await import(pkg);
-  if (!mod.DEVICES) die(`${pkg} does not export DEVICES`);
+async function loadDriverData(driver) {
+  const mod = await import(driver.pkg);
+  if (!mod.DEVICES) die(`${driver.pkg} does not export DEVICES`);
   const devices = Object.values(mod.DEVICES);
   const mediaSrc = mod.MEDIA;
   const media = !mediaSrc ? [] : Array.isArray(mediaSrc) ? mediaSrc : Object.values(mediaSrc);
+
+  // The lean DEVICES export carries `supportStatus` but strips the raw
+  // `verifications` cells. Merge them from the pulled data/devices.json
+  // projection (same source the matrix builder reads) so pages can surface
+  // the canonical per-cell lastReported date.
+  const aggPath = join(SITE_ROOT, '.aggregate', 'devices', `${driver.name}.json`);
+  if (existsSync(aggPath)) {
+    const byKey = new Map(
+      (JSON.parse(readFileSync(aggPath, 'utf8')).devices ?? []).map(d => [d.key, d]),
+    );
+    for (const dev of devices) {
+      const rich = byKey.get(dev.key);
+      if (rich?.verifications) dev.verifications = rich.verifications;
+    }
+  }
   return { devices, media };
 }
 
@@ -686,9 +701,15 @@ function renderAtAGlance(dev, driver, pkgVersion) {
     ? `\`${driver.pkg}@${supportPkgVersion}\``
     : `\`${driver.pkg}@${pkgVersion}\``;
 
-  const lastVerifiedCell = dev.support?.lastVerified
-    ? `📅 ${dev.support.lastVerified}`
-    : '—';
+  // Canonical date lives per-cell in `verifications.<transport>.lastReported`;
+  // latest wins (ISO dates sort chronologically). Fall back to the deprecated
+  // `support.lastVerified` for drivers not yet migrated off the alias.
+  const reportedDates = Object.values(dev.verifications ?? {})
+    .map(cell => cell?.lastReported)
+    .filter(Boolean)
+    .sort();
+  const lastVerified = reportedDates.at(-1) ?? dev.support?.lastVerified;
+  const lastVerifiedCell = lastVerified ? `📅 ${lastVerified}` : '—';
 
   const icon = deviceIconFor(dev.family, engines);
   const mediaCell = icon
@@ -1235,7 +1256,7 @@ async function main() {
       log(`${driver.name}: no repository/bugs URL in package.json — CTAs will be omitted`);
     }
 
-    const { devices, media } = await loadDriverData(driver.pkg);
+    const { devices, media } = await loadDriverData(driver);
 
     const driverDir = join(HW_ROOT, driver.name);
     mkdirSync(driverDir, { recursive: true });
