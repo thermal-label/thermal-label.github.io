@@ -569,21 +569,41 @@ function renderMediaTable(media) {
   return lines.join('\n');
 }
 
-function renderReports(support, hasIssues) {
-  const reports = support?.reports ?? [];
-  if (reports.length === 0) {
-    return hasIssues
-      ? '_Be the first — see the **Help verify this printer** card at the top of the page._'
-      : '_No reports yet._';
+function renderReports(dev, issuesUrl) {
+  // Legacy DeviceReport rows — drivers not yet migrated off `support.reports`.
+  const reports = dev.support?.reports ?? [];
+  if (reports.length > 0) {
+    const lines = [];
+    for (const r of reports) {
+      const self = r.selfVerified ? ' _(self-verified)_' : '';
+      const os = r.os ? ` · ${r.os}` : '';
+      const notes = r.notes ? `\n  > ${r.notes.replace(/\n/g, '\n  > ')}` : '';
+      lines.push(`- **#${r.issue}** — ${r.reporter}${self}, ${r.date}${os} · ${statusBadgeInline(r.result)}${notes}`);
+    }
+    return lines.join('\n');
   }
-  const lines = [];
-  for (const r of reports) {
-    const self = r.selfVerified ? ' _(self-verified)_' : '';
-    const os = r.os ? ` · ${r.os}` : '';
-    const notes = r.notes ? `\n  > ${r.notes.replace(/\n/g, '\n  > ')}` : '';
-    lines.push(`- **#${r.issue}** — ${r.reporter}${self}, ${r.date}${os} · ${statusBadgeInline(r.result)}${notes}`);
+
+  // Canonical shape: one row per recorded transport cell, linking its
+  // issue(s). Leaner than legacy rows — reporter/OS/notes live on the
+  // linked issue, not in the device data.
+  const cells = Object.entries(dev.verifications ?? {});
+  if (cells.length > 0) {
+    const lines = [];
+    for (const [transport, cell] of cells) {
+      const refs = (cell.issues ?? [])
+        .map(n => (issuesUrl ? `[#${n}](${issuesUrl}/${n})` : `#${n}`))
+        .join(', ');
+      const lead = refs ? `**${refs}** — ` : '';
+      const date = cell.lastReported ? ` · ${cell.lastReported}` : '';
+      const reason = cell.reason ? ` — ${cell.reason}` : '';
+      lines.push(`- ${lead}${transportShortLabel(transport)} · ${statusBadgeInline(cell.status)}${date}${reason}`);
+    }
+    return lines.join('\n');
   }
-  return lines.join('\n');
+
+  return issuesUrl
+    ? '_Be the first — see the **Help verify this printer** card at the top of the page._'
+    : '_No reports yet._';
 }
 
 function buildIssueUrl(base, title, body) {
@@ -804,7 +824,7 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   }
 
   sections.push('## Verification reports');
-  sections.push(renderReports(dev.support, !!issuesUrl));
+  sections.push(renderReports(dev, issuesUrl));
 
   const footerCta = renderFooterCta(dev, driver, issuesUrl);
   if (footerCta) {
