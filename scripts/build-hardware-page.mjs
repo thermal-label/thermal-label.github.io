@@ -79,21 +79,37 @@ const PROTOCOL_DOC_URLS = {
   'niimbot:niimbot-d11-v1':     '/niimbot/protocol/niimbot',
 };
 
-const STATUS_ORDER = { verified: 0, partial: 1, broken: 2, untested: 3 };
+// EffectiveStatus rungs (contracts expandVerifications) — `expected`
+// is the propagated rung, `unverified` the floor. Legacy `broken` /
+// `untested` retained as fallback for any driver repo not yet shipping
+// the rich `supportStatus` projection.
+const STATUS_ORDER = {
+  verified: 0,
+  expected: 1,
+  partial: 2,
+  unverified: 3,
+  unsupported: 4,
+};
 const STATUS_LABEL = {
-  verified: '✅ verified',
-  partial:  '⚠️ partial',
-  broken:   '❌ broken',
-  untested: '· untested',
+  verified:    '✅ verified',
+  expected:    '🔄 expected',
+  partial:     '⚠️ partial',
+  unverified:  '· unverified',
+  unsupported: '❌ unsupported',
+  broken:      '❌ broken',
+  untested:    '· untested',
 };
 
 // Inline form — no leading bullet, since these get joined with `·`
 // separators in detail-page prose and the bullet would double up.
 const STATUS_LABEL_INLINE = {
-  verified: '✅ verified',
-  partial:  '⚠️ partial',
-  broken:   '❌ broken',
-  untested: '⏳ untested',
+  verified:    '✅ verified',
+  expected:    '🔄 expected',
+  partial:     '⚠️ partial',
+  unverified:  '⏳ unverified',
+  unsupported: '❌ unsupported',
+  broken:      '❌ broken',
+  untested:    '⏳ untested',
 };
 
 const TRANSPORT_LABEL = {
@@ -199,10 +215,11 @@ async function loadDriverData(driver) {
   const mediaSrc = mod.MEDIA;
   const media = !mediaSrc ? [] : Array.isArray(mediaSrc) ? mediaSrc : Object.values(mediaSrc);
 
-  // The lean DEVICES export carries `supportStatus` but strips the raw
-  // `verifications` cells. Merge them from the pulled data/devices.json
-  // projection (same source the matrix builder reads) so pages can surface
-  // the canonical per-cell lastReported date.
+  // The lean DEVICES export strips the raw `verifications` cells and may
+  // predate the rich projection. Merge `verifications`, `verificationGrid`,
+  // and the rolled-up `supportStatus` from the pulled data/devices.json
+  // (same source the matrix builder reads) so pages render the canonical
+  // effective status, propagated `expected` rungs, and per-cell dates.
   const aggPath = join(SITE_ROOT, '.aggregate', 'devices', `${driver.name}.json`);
   if (existsSync(aggPath)) {
     const byKey = new Map(
@@ -211,6 +228,8 @@ async function loadDriverData(driver) {
     for (const dev of devices) {
       const rich = byKey.get(dev.key);
       if (rich?.verifications) dev.verifications = rich.verifications;
+      if (rich?.verificationGrid) dev.verificationGrid = rich.verificationGrid;
+      if (rich?.supportStatus) dev.supportStatus = rich.supportStatus;
     }
   }
   return { devices, media };
@@ -500,14 +519,16 @@ function transportDetails(name, params) {
   }
 }
 
-function renderConnectivityTable(transports, support) {
+function renderConnectivityTable(transports, grid) {
   if (transports.length === 0) return '_No transports declared._';
   const lines = [
     '| Transport | Details | Status |',
     '| --- | --- | --- |',
   ];
   for (const [name, params] of transports) {
-    const st = support?.transports?.[name];
+    // Effective per-transport status from the expanded verification grid
+    // (carries propagated `expected`), falling back to `—` when absent.
+    const st = grid?.[name]?.status;
     lines.push(
       `| ${transportGlyph(name)} **${transportShortLabel(name)}** | ${transportDetails(name, params)} | ${st ? statusBadgeInline(st) : '—'} |`,
     );
@@ -651,7 +672,7 @@ function buildIssueLinks(dev, issuesUrl) {
 function renderHero(dev, driver, issuesUrl) {
   const links = buildIssueLinks(dev, issuesUrl);
   if (!links) return '';
-  const status = dev.support?.status ?? 'untested';
+  const status = dev.supportStatus ?? 'unverified';
 
   // Untested + broken: emphasise the verify ask. Verified + partial:
   // tone is "your refresh report still helps" but less urgent.
@@ -698,7 +719,7 @@ function renderFooterCta(dev, driver, issuesUrl) {
 }
 
 function renderAtAGlance(dev, driver, pkgVersion) {
-  const status = dev.support?.status ?? 'untested';
+  const status = dev.supportStatus ?? 'unverified';
   const transports = Object.keys(dev.transports ?? {});
   const engines = dev.engines ?? [];
 
@@ -752,7 +773,7 @@ function renderAtAGlance(dev, driver, pkgVersion) {
 }
 
 function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
-  const status = dev.support?.status ?? 'untested';
+  const status = dev.supportStatus ?? 'unverified';
   const transports = Object.entries(dev.transports ?? {});
   const chassisCaps = renderChassisCapabilities(dev);
   const hasQuirks = !!(dev.hardwareQuirks || dev.support?.quirks);
@@ -795,7 +816,7 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   sections.push(renderEnginesTable(dev.engines ?? [], dev.support, dev.family));
 
   sections.push('## Connectivity');
-  sections.push(renderConnectivityTable(transports, dev.support));
+  sections.push(renderConnectivityTable(transports, dev.verificationGrid));
   if (chassisCaps.length > 0) {
     sections.push(`**Chassis features:** ${chassisCaps.join(', ')}`);
   }
@@ -1303,7 +1324,7 @@ async function main() {
         family: driver.displayName,
         name: dev.name,
         transports: Object.keys(dev.transports),
-        status: dev.support?.status ?? 'untested',
+        status: dev.supportStatus ?? 'unverified',
         slug,
       });
     }
@@ -1369,8 +1390,19 @@ async function main() {
     log(`${driver.name}@${pkgJson.version}: wrote ${devices.length} device pages`);
   }
 
-  const counts = { total: indexRows.length, verified: 0, partial: 0, broken: 0, untested: 0 };
-  for (const r of indexRows) counts[r.status]++;
+  const counts = {
+    total: indexRows.length,
+    verified: 0,
+    expected: 0,
+    partial: 0,
+    unverified: 0,
+    unsupported: 0,
+  };
+  // Coalesce any legacy rung that slips through from an unmigrated driver.
+  for (const r of indexRows) {
+    const k = r.status === 'untested' ? 'unverified' : r.status === 'broken' ? 'unsupported' : r.status;
+    if (k in counts) counts[k]++;
+  }
 
   const data = {
     generatedAt: new Date().toISOString(),
