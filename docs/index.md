@@ -4,10 +4,10 @@ layout: home
 hero:
   name: thermal-label
   text: TypeScript drivers for thermal printers
-  tagline: 55 supported devices across Brother QL and DYMO. Six transports. Reverse-engineered wire-protocol references. MIT-licensed, no vendor SDK.
+  tagline: 83 supported devices across Brother QL, DYMO and Marklife. Six transports. Reverse-engineered wire-protocol references. MIT-licensed, no vendor SDK.
   actions:
     - theme: brand
-      text: Browse 55 devices
+      text: Browse 83 devices
       link: /hardware/
     - theme: alt
       text: Introduction
@@ -21,8 +21,8 @@ hero:
 
 features:
   - icon: 🖨️
-    title: 55 devices, one table
-    details: Brother QL DK-tape, Brother PT-P/PT-E TZe tape, DYMO LabelManager D1 tape, DYMO LabelWriter die-cut, DYMO LetraTag LT tape. Filter by family, transport, and verification status.
+    title: 83 devices, one table
+    details: Brother QL DK-tape, Brother PT-P/PT-E TZe tape, DYMO LabelManager D1 tape, DYMO LabelWriter die-cut, DYMO LetraTag LT tape, Marklife / Deli / AbleMark rolls and tape. Filter by family, transport, and verification status.
     link: /hardware/
     linkText: Open hardware coverage
   - icon: 🔌
@@ -32,7 +32,7 @@ features:
     linkText: Transport reference
   - icon: 📜
     title: Wire-protocol references
-    details: Brother QL raster, Brother PT raster, DYMO D1 tape, LW 450 raster, LW 550 raster, LabelWriter Duo tape, LetraTag BT — opcodes, status frames, compression, all documented.
+    details: Brother QL raster, Brother PT raster, DYMO D1 tape, LW 450 raster, LW 550 raster, LabelWriter Duo tape, LetraTag BT, Marklife L11 and YXQ — opcodes, status frames, compression, all documented.
     link: /guide/architecture
     linkText: Architecture overview
   - icon: ⌨️
@@ -44,14 +44,14 @@ features:
   # columns wide and tints it (the 3×2 home grid). Keep it last.
   - icon: 🧪
     title: Verify your printer in the browser
-    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report — straight from the browser, no install. Two minutes turns an "untested" row into a "verified" one for everyone who buys the same model. One harness app per family — Brother QL, LabelManager, LabelWriter, and LetraTag.
+    details: Pair a printer over WebUSB or Web Bluetooth, run a one-page diagnostic print, and file a verification report — straight from the browser, no install. Two minutes turns an "untested" row into a "verified" one for everyone who buys the same model. One harness app per family — Brother QL, LabelManager, LabelWriter, LetraTag, and Marklife.
     link: /harness/
     linkText: Open the harness
 ---
 
 ## 🖨️ Hardware coverage at a glance
 
-The contracts-shape `DEVICES` registry across the four driver packages currently lists **55 printers**. Each row links to a per-device page with transports, engines, supported media, and verification reports.
+The contracts-shape `DEVICES` registry across the five driver packages currently lists **83 printers**. Each row links to a per-device page with transports, engines, supported media, and verification reports.
 
 | Family | Devices | Tape / label model | Transports |
 |---|---:|---|---|
@@ -59,8 +59,9 @@ The contracts-shape `DEVICES` registry across the four driver packages currently
 | 🟧 [**DYMO LabelManager**](/labelmanager/hardware) | 8 | D1 tape, single colour | USB, Bluetooth GATT |
 | 🟥 [**DYMO LabelWriter**](/labelwriter/hardware) | 22 | Pre-cut die-cut labels (550/5XL require NFC-locked DYMO media) | USB, Web Bluetooth on selected models |
 | 🟨 [**DYMO LetraTag**](/letratag/hardware) | 1 | LT label cassettes | Web Bluetooth |
+| 🟩 [**Marklife / Deli / AbleMark**](/marklife/hardware) | 28 | Gap / die-cut rolls (2" and 4" chassis) and 12–15 mm narrow tape (P12 / P15 family) | Bluetooth SPP, Bluetooth GATT, USB on the P12 / P15 |
 
-→ [**Browse all 55 devices in the interactive table**](/hardware/)
+→ [**Browse all 83 devices in the interactive table**](/hardware/)
 
 ## 📜 Wire-protocol references
 
@@ -72,6 +73,8 @@ If you are reverse-engineering, porting to another language, or auditing a paylo
 - [**LabelWriter raster**](/labelwriter/protocol/lw-raster) — classic LW 3xx/4xx generation (incl. SE450, Twin Turbo, Wireless, Duo label side).
 - [**LabelWriter 5xx raster**](/labelwriter/protocol/lw5-raster) — LW 5xx generation, including NFC media gate.
 - [**LetraTag BT**](/letratag/protocol/letratag-bt) — DYMO LetraTag LT-200B, the Bluetooth-LE label maker.
+- [**Marklife L11**](/marklife/protocol/l11) — the narrow-tape P12 / P15 family: session frame, uncompressed raster, bench-confirmed on both.
+- [**Marklife YXQ**](/marklife/protocol/yxq) — the S2 / S8 / P50 / D210 / X2 command stream with a 1 KiB-window zlib raster and per-id job shapes; plus [CPCL](/marklife/protocol/cpcl), [JBIG](/marklife/protocol/jbig), [TSPL](/marklife/protocol/tspl) and [ESC/POS](/marklife/protocol/escpos) variants documented from analysis.
 
 ## 📦 Pick a driver
 
@@ -79,6 +82,7 @@ If you are reverse-engineering, porting to another language, or auditing a paylo
 - [**@thermal-label/labelmanager-***](/labelmanager/) — D1 tape lineup, USB and Web Bluetooth.
 - [**@thermal-label/labelwriter-***](/labelwriter/) — die-cut LabelWriter family, including the Duo composite device.
 - [**@thermal-label/letratag-***](/letratag/) — DYMO LetraTag LT-200B over Web Bluetooth.
+- [**@thermal-label/marklife-***](/marklife/) — Marklife / Deli / AbleMark family and whitelabels over Bluetooth SPP, BLE and USB.
 - [**@thermal-label/contracts**](/contracts/) — the type-only surface (`Transport`, `PrinterAdapter`, `PrinterDiscovery`, media, status, errors) every driver targets.
 - [**@thermal-label/transport**](/transport/) — six concrete transport classes behind one interface.
 - [**thermal-label-cli**](/cli/) — `thermal-label` command for discovery, status, and quick prints.
@@ -96,5 +100,6 @@ If you need **templates, barcodes, CSV batches, and sheet PDFs**, pair these dri
 - **[pklaus/brother_ql](https://github.com/pklaus/brother_ql)** — the established Python implementation of the Brother QL raster protocol.
 - **[tylercrumpton/brotherql-webusb](https://github.com/tylercrumpton/brotherql-webusb)** — JavaScript / WebUSB port of `brother_ql`.
 - **[labelle-org/labelle](https://github.com/labelle-org/labelle)** — Python implementation of the DYMO LabelManager protocol.
+- **[tomLadder/thermoprint](https://github.com/tomLadder/thermoprint)** — independent reverse-engineering of the Marklife / Deli family, including the L11 stream and the BLE flow control.
 
 → Full list on the [See also](/see-also) page.

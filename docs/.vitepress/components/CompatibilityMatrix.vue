@@ -227,7 +227,6 @@ onUnmounted(() => {
             scope="col"
             class="cmx-th-transport"
           >{{ TRANSPORT_LABELS[t] }}</th>
-          <th scope="col">Notes</th>
         </tr>
       </thead>
       <tbody>
@@ -250,9 +249,6 @@ onUnmounted(() => {
               <span class="cmx-cell-label">{{ STATUS_LABELS[row.cells[t]!.status] }}</span>
             </span>
             <span v-else class="cmx-cell cmx-cell--missing" aria-hidden="true">—</span>
-          </td>
-          <td class="cmx-td-notes">
-            <span v-if="row.multiEngine" class="cmx-note">multi-engine — no inferred lifts</span>
           </td>
         </tr>
       </tbody>
@@ -406,11 +402,6 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.cmx-td-notes {
-  font-size: 0.75rem;
-  color: var(--vp-c-text-2);
-}
-
 .cmx-name-link {
   font-weight: 500;
   color: var(--vp-c-brand);
@@ -472,7 +463,4 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.cmx-note {
-  font-style: italic;
-}
 </style>

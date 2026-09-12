@@ -65,6 +65,14 @@ your stack, one of them may suit you better.
 - **[hannesweisbach/ptouch-print](https://github.com/hannesweisbach/ptouch-print)**
   — older C driver for the same P-touch family.
 
+**Marklife / Deli / AbleMark:**
+
+- **[tomLadder/thermoprint](https://github.com/tomLadder/thermoprint)**
+  — TypeScript reverse-engineering of the same family; documents the
+  L11 session frame, the device → protocol table, the BLE credit gate
+  and the per-device packet sizes and timers that the marklife pages
+  cross-reference.
+
 One firmware hack also gets a mention in the docs:
 **[free-dmo/free-dmo-stm32](https://github.com/free-dmo/free-dmo-stm32)**
 replaces a DYMO LabelWriter's STM32 firmware to drop the label-spool

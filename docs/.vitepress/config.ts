@@ -238,6 +238,40 @@ export default defineConfig({
         },
       ],
 
+      '/marklife/': [
+        {
+          text: '@thermal-label/marklife-*',
+          items: [
+            { text: 'Overview', link: '/marklife/' },
+            { text: 'Getting started', link: '/marklife/getting-started' },
+            { text: 'Core', link: '/marklife/core' },
+            { text: 'Node', link: '/marklife/node' },
+            { text: 'Web (Bluetooth, USB, Serial)', link: '/marklife/web' },
+            { text: 'Hardware', link: '/marklife/hardware' },
+            { text: 'Media', link: '/marklife/media' },
+            { text: 'Verification checklist', link: '/marklife/verification-checklist' },
+            { text: 'Hardware harness', link: 'https://thermal-label.github.io/harness/marklife/' },
+          ],
+        },
+        {
+          text: 'Wire protocols',
+          items: [
+            { text: 'Overview', link: '/marklife/protocol/' },
+            { text: 'L11', link: '/marklife/protocol/l11' },
+            { text: 'YXQ', link: '/marklife/protocol/yxq' },
+            { text: 'CPCL', link: '/marklife/protocol/cpcl' },
+            { text: 'JBIG', link: '/marklife/protocol/jbig' },
+            { text: 'TSPL', link: '/marklife/protocol/tspl' },
+            { text: 'ESC/POS', link: '/marklife/protocol/escpos' },
+          ],
+        },
+        {
+          text: 'API reference',
+          collapsed: true,
+          items: [{ text: 'TypeDoc index', link: '/marklife/api/' }],
+        },
+      ],
+
       '/cli/': [
         {
           text: 'thermal-label-cli',

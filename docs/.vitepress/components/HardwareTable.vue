@@ -9,7 +9,7 @@ interface Row {
   family: string;
   name: string;
   transports: string[];
-  status: 'verified' | 'partial' | 'broken' | 'untested';
+  status: 'verified' | 'expected' | 'partial' | 'unverified' | 'unsupported';
   slug: string;
 }
 
@@ -23,12 +23,13 @@ interface DriverMeta {
 
 const STATUS_ORDER: Record<string, number> = data.statusOrder;
 const STATUS_LABEL: Record<string, string> = {
-  verified: '✅ verified',
-  partial:  '⚠️ partial',
-  broken:   '❌ broken',
-  untested: '· untested',
+  verified:    '✅ verified',
+  expected:    '🔄 expected',
+  partial:     '⚠️ partial',
+  unverified:  '· unverified',
+  unsupported: '❌ unsupported',
 };
-const STATUS_LIST = ['verified', 'partial', 'broken', 'untested'] as const;
+const STATUS_LIST = ['verified', 'expected', 'partial', 'unverified', 'unsupported'] as const;
 const TRANSPORT_LIST = ['usb', 'tcp', 'serial', 'bluetooth-spp', 'bluetooth-gatt'] as const;
 const TRANSPORT_LABEL: Record<string, string> = {
   usb: 'USB',
@@ -99,8 +100,10 @@ const sortedRows = computed(() => {
 });
 
 const counts = computed(() => {
-  const c = { verified: 0, partial: 0, broken: 0, untested: 0 };
-  for (const r of allRows) c[r.status as keyof typeof c]++;
+  const c = { verified: 0, expected: 0, partial: 0, unverified: 0, unsupported: 0 };
+  for (const r of allRows) {
+    if (r.status in c) c[r.status as keyof typeof c]++;
+  }
   return c;
 });
 
@@ -332,9 +335,10 @@ function clearTransports() { selectedTransports.value = new Set(); }
 <style scoped>
 .hw-table-root {
   --hw-verified: #22c55e;
+  --hw-expected: #86efac;
   --hw-partial: #f59e0b;
-  --hw-broken: #ef4444;
-  --hw-untested: #94a3b8;
+  --hw-unverified: #94a3b8;
+  --hw-unsupported: #ef4444;
   font-size: 14px;
 }
 
@@ -463,10 +467,11 @@ function clearTransports() { selectedTransports.value = new Set(); }
   font-weight: 500;
 }
 
-.hw-status-verified { color: var(--hw-verified); }
-.hw-status-partial  { color: var(--hw-partial); }
-.hw-status-broken   { color: var(--hw-broken); }
-.hw-status-untested { color: var(--hw-untested); }
+.hw-status-verified    { color: var(--hw-verified); }
+.hw-status-expected    { color: var(--hw-expected); }
+.hw-status-partial     { color: var(--hw-partial); }
+.hw-status-unverified  { color: var(--hw-unverified); }
+.hw-status-unsupported { color: var(--hw-unsupported); }
 
 .hw-detail-link {
   font-size: 0.8125rem;
