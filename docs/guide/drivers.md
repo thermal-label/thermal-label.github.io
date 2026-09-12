@@ -34,6 +34,18 @@ Direct thermal LabelWriter support:
 
 [Per-package docs →](/labelmanager/) · [Hardware list →](/labelmanager/hardware)
 
+## Marklife / Deli / AbleMark — `@thermal-label/marklife-*`
+
+The P12, P15, S2, X2, P50, D210 and their whitelabels:
+
+- **`marklife-core`** — six wire-protocol encoders, device registry, media registry (browser + Node).
+- **`marklife-node`** — Bluetooth SPP through the OS-paired port, USB on the P12 / P15.
+- **`marklife-web`** — **Web Bluetooth** (the family's credit-gated BLE profile), WebUSB, Web Serial.
+
+**Verified on three units** (P12, P15, S2); every other chassis is inferred and marked so. No chassis reports its media — `print()` needs a media descriptor.
+
+[Per-package docs →](/marklife/) · [Hardware list →](/marklife/hardware)
+
 ## Shared contracts and transport
 
 All new work aligns with:

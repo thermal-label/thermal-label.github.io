@@ -28,6 +28,7 @@
     "@thermal-label/labelwriter-core": "^0.6.4",
     "@thermal-label/labelwriter-web": "^0.6.4",
     "@thermal-label/letratag-core": "^0.6.0",
+    "@thermal-label/marklife-core": "^0.1.0",
     "@thermal-label/transport": "^0.6.0"
   },
   "devDependencies": {

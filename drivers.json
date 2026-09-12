@@ -110,10 +110,10 @@
       "kind": "driver",
       "repo": "thermal-label/marklife",
       "ref": "main",
-      "enabled": false,
       "displayName": "Marklife",
-      "manufacturer": "Marklife",
+      "manufacturer": "Marklife / Deli / AbleMark",
       "pkg": "@thermal-label/marklife-core",
+      "harness": true,
       "requiredFiles": ["index.md", "getting-started.md"],
       "mediaDataFile": "packages/core/data/media.json"
     },

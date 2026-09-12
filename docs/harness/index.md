@@ -30,6 +30,7 @@ No install, no SDK, no command line — it runs in a browser tab.
 | DYMO LabelManager | [**LabelManager harness**](https://thermal-label.github.io/harness/labelmanager/) | USB (WebUSB) |
 | DYMO LabelWriter | [**LabelWriter harness**](https://thermal-label.github.io/harness/labelwriter/) | USB (WebUSB) |
 | DYMO LetraTag | [**LetraTag harness**](https://thermal-label.github.io/harness/letratag/) | Bluetooth (Web Bluetooth) |
+| Marklife / Deli / AbleMark | [**Marklife harness**](https://thermal-label.github.io/harness/marklife/) | Bluetooth (Web Bluetooth), USB (WebUSB), Serial (Web Serial) |
 
 Each harness needs a **Chromium-class browser** — Chrome, Edge, or
 similar. WebUSB and Web Bluetooth are not available in Firefox or
