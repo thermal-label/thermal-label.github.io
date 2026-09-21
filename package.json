@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@mbtech-nl/bitmap": "^1.2.0",
-    "@thermal-label/brother-ql-core": "^0.6.2",
-    "@thermal-label/brother-ql-web": "^0.6.2",
+    "@thermal-label/brother-ql-core": "^0.6.3",
+    "@thermal-label/brother-ql-web": "^0.6.3",
     "@thermal-label/contracts": "^0.6.3",
     "@thermal-label/d1-core": "^0.6.0",
     "@thermal-label/labelmanager-core": "^0.6.0",
