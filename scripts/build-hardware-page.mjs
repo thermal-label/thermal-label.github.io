@@ -336,17 +336,24 @@ function buildDeviceHead(dev, driver, description) {
     head.push(nameMeta('twitter:image', imageUrl));
   }
 
-  const product = {
+  // Not `Product`: Google requires offers/review/aggregateRating on those,
+  // and a support page has none of them honestly.
+  const device = {
+    '@type': 'Thing',
+    name: dev.name,
+    description: `${driver.displayName} label printer`,
+  };
+  if (imageUrl) device.image = imageUrl;
+  head.push(ldJson({
     '@context': 'https://schema.org',
-    '@type': 'Product',
+    '@type': 'WebPage',
     name: dev.name,
     description,
     url,
-    manufacturer: { '@type': 'Organization', name: driver.manufacturer },
-    category: driver.displayName,
-  };
-  if (imageUrl) product.image = imageUrl;
-  head.push(ldJson(product));
+    isPartOf: { '@type': 'WebSite', name: 'thermal-label', url: SITE_HOSTNAME },
+    about: device,
+    mentions: { '@type': 'Organization', name: driver.manufacturer },
+  }));
 
   return head;
 }
