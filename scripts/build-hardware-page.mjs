@@ -863,7 +863,9 @@ function renderDevicePage(dev, driver, media, issuesUrl, pkgVersion) {
   const head = buildDeviceHead(dev, driver, description);
   const frontmatter = [
     '---',
-    `title: ${escapeYamlValue(dev.name)}`,
+    // `<title>` only — the body carries its own H1. Brand + "driver" is what
+    // people type into a search engine.
+    `title: ${escapeYamlValue(`${dev.name} — ${driver.displayName} driver`)}`,
     `description: ${escapeYamlValue(description)}`,
     'editLink: false',
     'pageClass: hardware-detail',

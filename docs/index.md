@@ -1,5 +1,8 @@
 ---
 layout: home
+title: thermal-label — open-source drivers for DYMO, Brother and Marklife label printers
+titleTemplate: false
+description: TypeScript drivers for 83 thermal label printers — DYMO LabelWriter, LabelManager and LetraTag, Brother QL and PT, Marklife — over USB, network, serial, WebUSB and Bluetooth.
 
 hero:
   name: thermal-label
